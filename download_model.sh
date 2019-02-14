@@ -1,5 +1,6 @@
 model=$1
 
+mkdir models
 mkdir models/$model
 
 # TODO: gsutil rsync -r gs://gpt-2/models/ models/
