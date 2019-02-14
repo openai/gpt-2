@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 model=$1
 
 mkdir -p models/$model
