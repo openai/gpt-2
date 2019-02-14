@@ -1,12 +1,16 @@
 # gpt-2
 
-Code and samples from the paper "Language Models are Unsupervised Multitask Learners"
+Code and samples from the paper ["Language Models are Unsupervised Multitask Learners"](https://d4mucfpksywv.cloudfront.net/better-language-models/language-models.pdf).
+
+For now, we have only released a smaller (117M parameter) version of GPT-2.
+
+See more details in our [blog post](https://blog.openai.com/better-language-models/).
 
 ## Installation
 
-Download the (small, 117M parameter) model data:
+Download the model data (needs [gsutil](https://cloud.google.com/storage/docs/gsutil_install)):
 ```
-gsutil rsync -r gs://gpt-2/models/ models/
+mkdir models && gsutil rsync -r gs://gpt-2/models/ models/
 ```
 
 Install python packages:
