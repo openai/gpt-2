@@ -28,7 +28,7 @@ def sample_model(
     if length is None:
         length = hparams.n_ctx
     elif length > hparams.n_ctx:
-        raise ValueError(f"can't get samples longer than window size: {hparams.n_ctx}")
+        raise ValueError("Can't get samples longer than window size: %s" % hparams.n_ctx)
 
     with tf.Session(graph=tf.Graph()) as sess:
         output = sample.sample_sequence(
@@ -49,7 +49,7 @@ def sample_model(
                 generated += batch_size
                 text = enc.decode(out[i])
                 print("=" * 40 + " SAMPLE " + str(generated) + " " + "=" * 40)
-                print(f"{text}")
+                print(text)
 
 if __name__ == '__main__':
     fire.Fire(sample_model)
