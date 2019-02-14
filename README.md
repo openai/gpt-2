@@ -10,12 +10,12 @@ See more details in our [blog post](https://blog.openai.com/better-language-mode
 
 Download the model data (needs [gsutil](https://cloud.google.com/storage/docs/gsutil_install)):
 ```
-mkdir models && gsutil rsync -r gs://gpt-2/models/ models/
+sh download_model.sh 117M
 ```
 
 Install python packages:
 ```
-pip install -r requirements.txt
+pip3 install -r requirements.txt
 ```
 
 ## Sample generation
