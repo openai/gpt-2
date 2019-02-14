@@ -18,21 +18,28 @@ Install python packages:
 pip3 install -r requirements.txt
 ```
 
-## Sample generation
+## Unconditional sample generation
 
 | WARNING: Samples are unfiltered and may contain offensive content. |
 | --- |
 
 To generate unconditional samples from the small model:
 ```
-python3 src/main.py | tee samples
+python3 src/generate_unconditional_samples.py | tee samples
 ```
 There are various flags for controlling the samples:
 ```
-python3 src/main.py --top_k 40 --temperature 0.7 | tee samples
+python3 src/generate_unconditional_samples.py --top_k 40 --temperature 0.7 | tee samples
 ```
 
-While we have not yet released GPT-2 itself, you can see some unconditional samples (with default settings of temperature 1 and no truncation) in `gpt2-samples.txt`.
+While we have not yet released GPT-2 itself, you can see some unconditional samples from it (with default settings of temperature 1 and no truncation) in `gpt2-samples.txt`.
+
+## Conditional sample generation
+
+To give the model custom prompts, you can use:
+```
+python3 src/interactive_conditional_samples.py
+```
 
 ## Future work
 
