@@ -1,3 +1,8 @@
+if [ "$#" -ne 1 ]; then
+    echo "You must enter the model name as a parameter, e.g.: sh download_model.sh 117M"
+    exit 1
+fi
+
 model=$1
 
 mkdir -p models/$model
