@@ -1,8 +1,17 @@
-model=$1
+#!/bin/bash
 
-mkdir -p models/$model
+ID=1kY-qc0uCU3uGPhVGTfryvHr5zWh_B9g7
+NAME=117M
+DIR=models
+GREP_CMD=grep
+OS=$(uname -s | tr '[:upper:]' '[:lower:]')
+if [ "${OS}" = "darwin" ]; then 
+GREP_CMD=pcregrep
+fi
 
-# TODO: gsutil rsync -r gs://gpt-2/models/ models/
-for filename in checkpoint encoder.json hparams.json model.ckpt.data-00000-of-00001 model.ckpt.index model.ckpt.meta vocab.bpe; do
-  gsutil cp gs://gpt-2/models/$model/$filename models/$model
-done
+
+curl -c /tmp/cookies "https://drive.google.com/uc?export=download&id=${ID}" > /tmp/intermezzo.html
+curl -L -b /tmp/cookies "https://drive.google.com$(cat /tmp/intermezzo.html | $GREP_CMD -o 'uc-download-link" [^>]* href="\K[^"]*' | sed 's/\&amp;/\&/g')" > "${DIR}/${NAME}.tar.gz"
+tar -xzvf "${DIR}/${NAME}.tar.gz" -C ${DIR}
+rm "${DIR}/${NAME}.tar.gz"
+
