@@ -8,7 +8,7 @@ See more details in our [blog post](https://blog.openai.com/better-language-mode
 
 ## Installation
 
-Download the model data (needs [gsutil](https://cloud.google.com/storage/docs/gsutil_install)):
+Download the model data
 ```
 sh download_model.sh 117M
 ```
