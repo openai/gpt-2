@@ -38,7 +38,7 @@ While we have not yet released GPT-2 itself, you can see some unconditional samp
 
 To give the model custom prompts, you can use:
 ```
-python3 src/interactive_conditional_samples.py --top_k 40 --temperature 0.7
+python3 src/interactive_conditional_samples.py --top_k 40
 ```
 
 ## Future work
