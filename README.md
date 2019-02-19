@@ -32,16 +32,17 @@ There are various flags for controlling the samples:
 python3 src/generate_unconditional_samples.py --top_k 40 --temperature 0.7 | tee samples
 ```
 
-While we have not yet released GPT-2 itself, you can see some unconditional samples from it:
-- `gpt2-samples.txt` (with default settings of temperature 1 and no truncation)
-- `gpt2-topk40-samples.txt` (with temperature 1 and top_k=40 truncation)
-
 ## Conditional sample generation
 
 To give the model custom prompts, you can use:
 ```
 python3 src/interactive_conditional_samples.py --top_k 40
 ```
+
+## GPT-2 samples
+
+While we have not yet released GPT-2 itself, you can see some samples from it in the `gpt-2-samples` folder.
+We show unconditional samples with default settings (temperature 1 and no truncation), with temperature 0.7, and with truncation with top_k 40.
 
 ## Future work
 
