@@ -29,7 +29,9 @@ Install other python packages:
 pip3 install -r requirements.txt
 ```
 
-## Unconditional sample generation
+## Usage
+
+### Unconditional sample generation
 
 | WARNING: Samples are unfiltered and may contain offensive content. |
 | --- |
@@ -43,7 +45,7 @@ There are various flags for controlling the samples:
 python3 src/generate_unconditional_samples.py --top_k 40 --temperature 0.7 | tee samples
 ```
 
-## Conditional sample generation
+### Conditional sample generation
 
 To give the model custom prompts, you can use:
 ```
