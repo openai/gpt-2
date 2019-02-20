@@ -43,6 +43,7 @@ python3 src/interactive_conditional_samples.py --top_k 40
 
 While we have not yet released GPT-2 itself, you can see some samples from it in the `gpt-2-samples` folder.
 We show unconditional samples with default settings (temperature 1 and no truncation), with temperature 0.7, and with truncation with top_k 40.
+We show conditional samples, with contexts drawn from `WebText`'s test set, with default settings (temperature 1 and no truncation), with temperature 0.7, and with truncation with top_k 40.
 
 ## Future work
 
