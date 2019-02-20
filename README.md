@@ -49,7 +49,3 @@ We show unconditional samples with default settings (temperature 1 and no trunca
 We may release code for evaluating the models on various benchmarks.
 
 We are still considering release of the larger models.
-
-## License
-
-Coming soon!
