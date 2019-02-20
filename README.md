@@ -8,6 +8,11 @@ See more details in our [blog post](https://blog.openai.com/better-language-mode
 
 ## Installation
 
+Git clone this repository, and `cd` into directory for remaining commands
+```
+git clone https://github.com/openai/gpt-2.git && cd gpt-2
+```
+
 Download the model data
 ```
 sh download_model.sh 117M
