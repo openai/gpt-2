@@ -13,6 +13,8 @@ Git clone this repository, and `cd` into directory for remaining commands
 git clone https://github.com/openai/gpt-2.git && cd gpt-2
 ```
 
+Then, follow instructions for either native or Docker installation.
+
 ### Native Installation
 
 Download the model data
