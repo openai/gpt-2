@@ -1,0 +1,6 @@
+# convert to OS line endings on checkout, back to LF on commit
+* text=auto
+
+# ensure anything copied to the container has unix style line endings
+*.sh text eol=lf
+requirements.txt text eol=lf
