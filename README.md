@@ -58,6 +58,12 @@ docker run --runtime=nvidia -it gpt-2 bash
 | WARNING: Samples are unfiltered and may contain offensive content. |
 | --- |
 
+Some of the examples below may include Unicode text characters. Set the environment variable:
+```
+export PYTHONIOENCODING=UTF-8
+```
+to override the standard stream settings in UTF-8 mode.
+
 ### Unconditional sample generation
 
 To generate unconditional samples from the small model:
