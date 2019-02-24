@@ -12,9 +12,7 @@ import model, sample, encoder
 def interact_model(
     model_name='117M',
     seed=None,
-    nsamples=1,
-    batch_size=None,
-    length=70,
+    length=20,
     temperature=1,
     top_k=0,
     conversation="""
@@ -33,12 +31,9 @@ her: sure, what do you want to talk about?"""
     with open(os.path.join('models', model_name, 'hparams.json')) as f:
         hparams.override_from_dict(json.load(f))
 
-    if length is None:
-        length = hparams.n_ctx // 2
-    elif length > hparams.n_ctx:
+    if length > hparams.n_ctx:
         raise ValueError("Can't get samples longer than window size: %s" % hparams.n_ctx)
 
-    length = 20
     with tf.Session(graph=tf.Graph()) as sess:
         np.random.seed(seed)
         tf.set_random_seed(seed)
@@ -50,13 +45,12 @@ her: sure, what do you want to talk about?"""
             temperature=temperature, top_k=top_k
         )
 
-        saver = tf.train.Saver()
-        ckpt = tf.train.latest_checkpoint(os.path.join('models', model_name))
-        saver.restore(sess, ckpt)
-
         print(conversation)
 
         while True: 
+            saver = tf.train.Saver()
+            ckpt = tf.train.latest_checkpoint(os.path.join('models', model_name))
+            saver.restore(sess, ckpt)
             message = None
             while not message:
                 message = input("you: ")
@@ -69,6 +63,7 @@ her: sure, what do you want to talk about?"""
             #sys.stderr.flush()
             
             encoded_conversation = enc.encode(conversation)
+            #print(len(encoded_conversation))
             result = sess.run(output, feed_dict={
                 context: [encoded_conversation]
             })[:, len(encoded_conversation):]
