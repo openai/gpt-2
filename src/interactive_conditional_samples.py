@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 import fire
 import json
 import os
@@ -17,6 +15,20 @@ def interact_model(
     temperature=1,
     top_k=0,
 ):
+    """
+    Interactively run the model
+    :model_name=117M : which model to use (default 117M)
+    :seed=None : Seed for random number generators, fix seed to reproduce
+     results
+    :nsamples=1 : number of samples to return
+    :batch_size=None : Number of batches, model runs nsamples//batch_size
+     times, each batch run is independent of previous run.
+    :length=None : Length of text to be returned, inclusive of punctuations
+     etc.
+    :temperature=1 : Controls degree of surprise in final output
+    :top_k=0 : Number of logits to be sampled, top_k=1 gives deterministic
+     output
+    """
     if batch_size is None:
         batch_size = 1
     assert nsamples % batch_size == 0
