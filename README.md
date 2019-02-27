@@ -75,11 +75,21 @@ There are various flags for controlling the samples:
 python3 src/generate_unconditional_samples.py --top_k 40 --temperature 0.7 | tee /tmp/samples
 ```
 
+To check flag descriptions, use:
+```
+python3 src/generate_unconditional_samples.py -- --help
+```
+
 ### Conditional sample generation
 
 To give the model custom prompts, you can use:
 ```
 python3 src/interactive_conditional_samples.py --top_k 40
+```
+
+To check flag descriptions, use:
+```
+python3 src/interactive_conditional_samples.py -- --help
 ```
 
 ## GPT-2 samples
