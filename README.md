@@ -68,11 +68,11 @@ to override the standard stream settings in UTF-8 mode.
 
 To generate unconditional samples from the small model:
 ```
-python3 src/generate_unconditional_samples.py | tee samples
+python3 src/generate_unconditional_samples.py | tee /tmp/samples
 ```
 There are various flags for controlling the samples:
 ```
-python3 src/generate_unconditional_samples.py --top_k 40 --temperature 0.7 | tee samples
+python3 src/generate_unconditional_samples.py --top_k 40 --temperature 0.7 | tee /tmp/samples
 ```
 
 ### Conditional sample generation
