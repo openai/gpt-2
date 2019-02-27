@@ -24,8 +24,7 @@ def sample_model(
      reproduce results
     :nsamples=0 : Number of samples to return, if 0, continues to
      generate samples indefinately.
-    :batch_size=1 : Number of batches, model runs nsamples//batch_size
-     times, each batch run is independent of previous run.
+    :batch_size=1 : Number of batches (only affects speed/memory).
     :length=None : Number of tokens in generated text, if None (default), is
      determined by model hyperparameters
     :temperature=1 : Float value controlling randomness in boltzmann
