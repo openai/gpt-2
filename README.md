@@ -102,8 +102,6 @@ We show unconditional samples with default settings (temperature 1 and no trunca
 We show conditional samples, with contexts drawn from `WebText`'s test set, with default settings (temperature 1 and no truncation), with temperature 0.7, and with truncation with top_k 40.
 
 ## Citation
-
-Please use the following bibtex entry:
 ```
 @article{radford2019language,
   title={Language Models are Unsupervised Multitask Learners},
@@ -117,7 +115,3 @@ Please use the following bibtex entry:
 We may release code for evaluating the models on various benchmarks.
 
 We are still considering release of the larger models.
-
-## License
-
-MIT
