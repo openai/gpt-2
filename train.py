@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-# run with PYTHONPATH=src
+# Usage:
+#  PYTHONPATH=src ./train --dataset <file|directory|glob>
 
 import fire
 import json
