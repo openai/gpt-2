@@ -185,14 +185,17 @@ def train_main(dataset,
                 fp.write(str(counter) + '\n')
 
         def generate_samples():
+            context_tokens = data_sampler.sample(1)
             all_text = []
-            for i in range(sample_num):
+            index = 0
+            while index < sample_num:
                 out = sess.run(
-                    tf_sample, feed_dict={context: [data_sampler.sample(1)]})
-                text = enc.decode(out[0])
-                all_text.append('======== SAMPLE {} ========'.format(i + 1))
-                all_text.append(text)
-                all_text.append('')
+                    tf_sample, feed_dict={context: batch_size*[context_tokens]})
+                for i in range(min(sample_num - index, batch_size)):
+                    text = enc.decode(out[i])
+                    text = '======== SAMPLE {} ========\n{}\n'.format(index + 1, text)
+                    all_text.append(text)
+                    index += 1
             print(text)
             maketree(os.path.join(SAMPLE_DIR, run_name))
             with open(
