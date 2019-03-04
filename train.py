@@ -81,7 +81,8 @@ class Sampler(object):
     def sample(self, length):
         assert length < self.total_size // len(
             self.chunks
-        ), "Dataset files are too small to sample {} tokens at a time".format(length)
+        ), "Dataset files are too small to sample {} tokens at a time".format(
+            length)
         while True:
             index = random.randint(0, self.total_size - length - 1)
             i = binary_search(lambda j: self.boundaries[j] > index, 0,
@@ -190,10 +191,12 @@ def train_main(dataset,
             index = 0
             while index < sample_num:
                 out = sess.run(
-                    tf_sample, feed_dict={context: batch_size*[context_tokens]})
+                    tf_sample,
+                    feed_dict={context: batch_size * [context_tokens]})
                 for i in range(min(sample_num - index, batch_size)):
                     text = enc.decode(out[i])
-                    text = '======== SAMPLE {} ========\n{}\n'.format(index + 1, text)
+                    text = '======== SAMPLE {} ========\n{}\n'.format(
+                        index + 1, text)
                     all_text.append(text)
                     index += 1
             print(text)
