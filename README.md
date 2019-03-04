@@ -17,12 +17,7 @@ Then, follow instructions for either native or Docker installation.
 
 ### Native Installation
 
-Download the model data
-```
-sh download_model.sh 117M
-```
-
-The remaining steps can optionally be done in a virtual environment using tools such as `virtualenv` or `conda`.
+All steps can optionally be done in a virtual environment using tools such as `virtualenv` or `conda`.
 
 Install tensorflow 1.12 (with GPU support, if you have a GPU and want everything to run faster)
 ```
@@ -36,6 +31,11 @@ pip3 install tensorflow-gpu==1.12.0
 Install other python packages:
 ```
 pip3 install -r requirements.txt
+```
+
+Download the model data
+```
+python3 download_model.py 117M
 ```
 
 ### Docker Installation
