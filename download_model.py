@@ -12,6 +12,7 @@ model = sys.argv[1]
 subdir = os.path.join('models', model)
 if not os.path.exists(subdir):
     os.makedirs(subdir)
+subdir = subdir.replace('\\','/') # needed for Windows
 
 for filename in ['checkpoint','encoder.json','hparams.json','model.ckpt.data-00000-of-00001', 'model.ckpt.index', 'model.ckpt.meta', 'vocab.bpe']:
 
