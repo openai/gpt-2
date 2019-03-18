@@ -97,14 +97,14 @@ python3 src/interactive_conditional_samples.py -- --help
 To retrain GPT-2 117M model on a custom text dataset:
 
 ```
-PYTHONPATH=src ./train --dataset <file|directory|glob>
+PYTHONPATH=src ./train.py --dataset <file|directory|glob>
 ```
 
 If you want to precompute the dataset's encoding for multiple runs, you can instead use:
 
 ```
 PYTHONPATH=src ./encode.py <file|directory|glob> /path/to/encoded.npz
-PYTHONPATH=src ./train --dataset /path/to/encoded.npz
+PYTHONPATH=src ./train.py --dataset /path/to/encoded.npz
 ```
 
 ## GPT-2 samples
