@@ -6,7 +6,7 @@
 
 * **[Margaret Mitchell et al](https://arxiv.org/abs/1810.03993)**
 
-  Our [usage](./readme#usage) writeup was loosely inspired by the paper
+  Our [usage](./README.md#usage) writeup was loosely inspired by the paper
   [Model Cards for Model Reporting](https://arxiv.org/abs/1810.03993)
   and related conversations with some of the authors.
 
