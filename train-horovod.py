@@ -13,6 +13,7 @@ import time
 import horovod.tensorflow as hvd
 
 import model, sample, encoder
+from load_dataset import load_dataset, Sampler
 
 CHECKPOINT_DIR = 'checkpoint'
 SAMPLE_DIR = 'samples'
@@ -26,74 +27,6 @@ def maketree(path):
         pass
 
 
-def load_dataset(enc, path):
-    paths = []
-    if os.path.isfile(path):
-        # Simple file
-        paths.append(path)
-    elif os.path.isdir(path):
-        # Directory
-        for (dirpath, _, fnames) in os.walk(path):
-            for fname in fnames:
-                paths.append(os.path.join(dirpath, fname))
-    else:
-        # Assume glob
-        paths = glob.glob(path)
-
-    token_chunks = []
-    for path in paths:
-        print(str(hvd.local_rank()), 'Reading', path)
-        if path.endswith('.npz'):
-            # Pre-encoded
-            with np.load(path) as npz:
-                for item in npz.files:
-                    token_chunks.append(npz[item])
-        else:
-            with open(path, 'r') as fp:
-                raw_text = fp.read()
-            tokens = np.stack(enc.encode(raw_text))
-            token_chunks.append(tokens)
-    return token_chunks
-
-
-def binary_search(f, lo, hi):
-    if f(lo) or not f(hi):
-        return None
-    while hi > lo + 1:
-        mid = (lo + hi) // 2
-        if f(mid):
-            hi = mid
-        else:
-            lo = mid
-    return hi
-
-
-class Sampler(object):
-    """Fairly samples a slice from a set of variable sized chunks.
-
-    'Fairly' means that the distribution is the same as sampling from one concatenated chunk,
-    but without crossing chunk boundaries."""
-
-    def __init__(self, chunks):
-        self.chunks = chunks
-        self.total_size = sum(chunk.shape[0] for chunk in chunks)
-        self.boundaries = [0]
-        for i in range(len(chunks)):
-            self.boundaries.append(self.boundaries[-1] + chunks[i].shape[0])
-
-    def sample(self, length):
-        assert length < self.total_size // len(
-            self.chunks
-        ), "Dataset files are too small to sample {} tokens at a time".format(length)
-        while True:
-            index = random.randint(0, self.total_size - length - 1)
-            i = binary_search(lambda j: self.boundaries[j] > index, 0,
-                              len(self.boundaries) - 1) - 1
-            if self.boundaries[i + 1] > index + length:
-                within_chunk = index - self.boundaries[i]
-                return self.chunks[i][within_chunk:within_chunk + length]
-
-
 def train_main(dataset,
                model_name='117M',
                seed=None,
@@ -103,7 +36,8 @@ def train_main(dataset,
                sample_every=4500,
                run_name='run1',
                restore_from='latest',
-               save_every=2000):
+               save_every=2000,
+               combine=50000):
 
     enc = encoder.get_encoder(model_name)
     hparams = model.default_hparams()
@@ -117,11 +51,11 @@ def train_main(dataset,
             "Can't get samples longer than window size: %s" % hparams.n_ctx)
 
     # TF config
-    
+
     config = tf.ConfigProto()
     config.gpu_options.visible_device_list = str(hvd.local_rank())
     config.gpu_options.allow_growth = True
-    
+
     with tf.Session(config=config) as sess:
         context = tf.placeholder(tf.int32, [batch_size, None])
         np.random.seed(seed)
@@ -140,11 +74,11 @@ def train_main(dataset,
             top_k=40)
 
         train_vars = [v for v in tf.trainable_variables() if 'model' in v.name]
-        
+
         opt = tf.train.AdamOptimizer()
         opt = hvd.DistributedOptimizer(opt)
         train_op = opt.minimize(loss, var_list=train_vars)
-        
+
         # Horovod: broadcast initial variable states from rank 0 to all other processes.
         # This is necessary to ensure consistent initialization of all workers when
         # training is started with random weights or restored from a checkpoint.
@@ -154,9 +88,9 @@ def train_main(dataset,
             var_list=train_vars,
             max_to_keep=5,
             keep_checkpoint_every_n_hours=2)
-        
+
         sess.run(tf.global_variables_initializer())
-        
+
 
         if restore_from == 'latest':
             ckpt = tf.train.latest_checkpoint(
@@ -172,11 +106,11 @@ def train_main(dataset,
             ckpt = tf.train.latest_checkpoint(restore_from)
         print(str(hvd.local_rank()), 'Loading checkpoint', ckpt)
         saver.restore(sess, ckpt)
-        
+
         bcast.run()
 
         print(str(hvd.local_rank()), 'Loading dataset...')
-        chunks = load_dataset(enc, dataset)
+        chunks = load_dataset(enc, dataset, combine)
         data_sampler = Sampler(chunks)
         print(str(hvd.local_rank()), 'dataset has', data_sampler.total_size, 'tokens')
         print(str(hvd.local_rank()), 'Training...')
@@ -227,13 +161,13 @@ def train_main(dataset,
 
         try:
             while True:
-                
+
                 batch = [data_sampler.sample(1024) for _ in range(batch_size)]
 
                 _, lv = sess.run((train_op, loss), feed_dict={context: batch})
 
                 avg_loss = (avg_loss[0] * 0.99 + lv, avg_loss[1] * 0.99 + 1.0)
-                
+
                 if hvd.rank() == 0:
                     if counter % save_every == 0:
                         save()
@@ -249,7 +183,7 @@ def train_main(dataset,
                             avg=avg_loss[0] / avg_loss[1]))
 
                 counter += 1
-                
+
         except KeyboardInterrupt:
             print('interrupted')
             if hvd.rank() == 0:
