@@ -33,7 +33,8 @@ def train_main(dataset,
                run_name='run1',
                restore_from='latest',
                save_every=1000,
-               combine=50000):
+               combine=50000,
+               learning_rate=0.0001):
 
     enc = encoder.get_encoder(model_name)
     hparams = model.default_hparams()
@@ -68,7 +69,7 @@ def train_main(dataset,
             top_k=40)
 
         train_vars = [v for v in tf.trainable_variables() if 'model' in v.name]
-        opt = tf.train.AdamOptimizer().minimize(loss, var_list=train_vars)
+        opt = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(loss, var_list=train_vars)
 
         summary_log = tf.summary.FileWriter(os.path.join(CHECKPOINT_DIR, run_name))
         summaries = tf.summary.merge_all()
