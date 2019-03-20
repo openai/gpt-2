@@ -57,6 +57,8 @@ def train_main(dataset,
             tf.nn.sparse_softmax_cross_entropy_with_logits(
                 labels=context[:, 1:], logits=output['logits'][:, :-1]))
 
+        tf.summary.scalar('loss', loss)
+
         tf_sample = sample.sample_sequence(
             hparams=hparams,
             length=sample_length,
@@ -67,6 +69,9 @@ def train_main(dataset,
 
         train_vars = [v for v in tf.trainable_variables() if 'model' in v.name]
         opt = tf.train.AdamOptimizer().minimize(loss, var_list=train_vars)
+
+        summary_log = tf.summary.FileWriter(os.path.join(CHECKPOINT_DIR, run_name))
+        summaries = tf.summary.merge_all()
 
         saver = tf.train.Saver(
             var_list=train_vars,
@@ -150,7 +155,9 @@ def train_main(dataset,
 
                 batch = [data_sampler.sample(1024) for _ in range(batch_size)]
 
-                _, lv = sess.run((opt, loss), feed_dict={context: batch})
+                _, lv, sm = sess.run((opt, loss, summaries), feed_dict={context: batch})
+
+                summary_log.add_summary(sm, counter)
 
                 avg_loss = (avg_loss[0] * 0.99 + lv, avg_loss[1] * 0.99 + 1.0)
 
