@@ -11,6 +11,7 @@ import time
 
 import model, sample, encoder
 from load_dataset import load_dataset, Sampler
+from accumulate import AccumulatingOptimizer
 
 CHECKPOINT_DIR = 'checkpoint'
 SAMPLE_DIR = 'samples'
@@ -26,6 +27,7 @@ parser.add_argument('--combine', metavar='CHARS', type=int, default=50000, help=
 
 parser.add_argument('--batch_size', metavar='SIZE', type=int, default=1, help='Batch size')
 parser.add_argument('--learning_rate', metavar='LR', type=float, default=0.0001, help='Learning rate for Adam')
+parser.add_argument('--accumulate_gradients', metavar='N', type=int, default=5, help='Accumulate gradients across N minibatches.')
 
 parser.add_argument('--restore_from', type=str, default='latest', help='Either "latest", "fresh", or a path to a checkpoint file')
 parser.add_argument('--run_name', type=str, default='run1', help='Run id. Name of subdirectory in checkpoint/ and samples/')
@@ -62,8 +64,6 @@ def main():
             tf.nn.sparse_softmax_cross_entropy_with_logits(
                 labels=context[:, 1:], logits=output['logits'][:, :-1]))
 
-        tf.summary.scalar('loss', loss)
-
         tf_sample = sample.sample_sequence(
             hparams=hparams,
             length=args.sample_length,
@@ -73,13 +73,22 @@ def main():
             top_k=40)
 
         train_vars = [v for v in tf.trainable_variables() if 'model' in v.name]
-        opt = tf.train.AdamOptimizer(
-            learning_rate=args.learning_rate).minimize(
-                loss, var_list=train_vars)
+        if args.accumulate_gradients > 1:
+            opt = AccumulatingOptimizer(
+                opt=tf.train.AdamOptimizer(learning_rate=args.learning_rate),
+                var_list=train_vars)
+            opt_reset = opt.reset()
+            opt_compute = opt.compute_gradients(loss)
+            opt_apply = opt.apply_gradients()
+            summary_loss = tf.summary.scalar('loss', opt_apply)
+        else:
+            opt_apply = tf.train.AdamOptimizer(
+                learning_rate=args.learning_rate).minimize(
+                    loss, var_list=train_vars)
+            summary_loss = tf.summary.scalar('loss', loss)
 
         summary_log = tf.summary.FileWriter(
             os.path.join(CHECKPOINT_DIR, args.run_name))
-        summaries = tf.summary.merge_all()
 
         saver = tf.train.Saver(
             var_list=train_vars,
@@ -150,6 +159,9 @@ def main():
                                  'samples-{}').format(counter), 'w') as fp:
                 fp.write('\n'.join(all_text))
 
+        def sample_batch():
+            return [data_sampler.sample(1024) for _ in range(args.batch_size)]
+
         avg_loss = (0.0, 0.0)
         start_time = time.time()
 
@@ -160,23 +172,28 @@ def main():
                 if counter % args.sample_every == 0:
                     generate_samples()
 
-                batch = [
-                    data_sampler.sample(1024) for _ in range(args.batch_size)
-                ]
+                if args.accumulate_gradients > 1:
+                    sess.run(opt_reset)
+                    for _ in range(args.accumulate_gradients):
+                        sess.run(
+                            opt_compute, feed_dict={context: sample_batch()})
+                    (v_loss, v_summary) = sess.run((opt_apply, summary_loss))
+                else:
+                    (_, v_loss, v_summary) = sess.run(
+                        (opt_apply, loss, summary_loss),
+                        feed_dict={context: sample_batch()})
 
-                _, lv, sm = sess.run((opt, loss, summaries),
-                                     feed_dict={context: batch})
+                summary_log.add_summary(v_summary, counter)
 
-                summary_log.add_summary(sm, counter)
-
-                avg_loss = (avg_loss[0] * 0.99 + lv, avg_loss[1] * 0.99 + 1.0)
+                avg_loss = (avg_loss[0] * 0.99 + v_loss,
+                            avg_loss[1] * 0.99 + 1.0)
 
                 print(
                     '[{counter} | {time:2.2f}] loss={loss:2.2f} avg={avg:2.2f}'
                     .format(
                         counter=counter,
                         time=time.time() - start_time,
-                        loss=lv,
+                        loss=v_loss,
                         avg=avg_loss[0] / avg_loss[1]))
 
                 counter += 1
