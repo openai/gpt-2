@@ -4,6 +4,7 @@
 #  PYTHONPATH=src ./train --dataset /path/to/output.npz
 
 import argparse
+import numpy as np
 
 import encoder
 from load_dataset import load_dataset
