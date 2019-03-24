@@ -3,10 +3,14 @@
 import fire
 import json
 import os
+from string import printable
 import numpy as np
 import tensorflow as tf
 
 import model, sample, encoder
+
+def clean_output(s):
+    return ''.join(filter(lambda x: x in set(printable), s))
 
 def interact_model(
     model_name='117M',
@@ -79,9 +83,8 @@ def interact_model(
                     generated += 1
                     text = enc.decode(out[i])
                     print("=" * 40 + " SAMPLE " + str(generated) + " " + "=" * 40)
-                    print(text)
+                    print(clean_output(text))
             print("=" * 80)
 
 if __name__ == '__main__':
     fire.Fire(interact_model)
-

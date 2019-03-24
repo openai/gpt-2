@@ -3,10 +3,14 @@
 import fire
 import json
 import os
+from string import printable
 import numpy as np
 import tensorflow as tf
 
 import model, sample, encoder
+
+def clean_output(s):
+    return ''.join(filter(lambda x: x in set(printable), s))
 
 def sample_model(
     model_name='117M',
@@ -68,8 +72,7 @@ def sample_model(
                 generated += batch_size
                 text = enc.decode(out[i])
                 print("=" * 40 + " SAMPLE " + str(generated) + " " + "=" * 40)
-                print(text)
+                print(clean_output(text))
 
 if __name__ == '__main__':
     fire.Fire(sample_model)
-
