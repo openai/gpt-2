@@ -41,21 +41,18 @@ def sample_sequence(*, hparams, length, start_token=None, batch_size=None, conte
         }
 
     with tf.name_scope('sample_sequence'):
-        # Don't feed the last context token -- leave that to the loop below
-        # TODO: Would be slightly faster if we called step on the entire context,
-        # rather than leaving the last token transformer calculation to the while loop.
-        context_output = step(hparams, context[:, :-1])
-
-        def body(past, prev, output):
-            next_outputs = step(hparams, prev[:, tf.newaxis], past=past)
+        def body(past, prev, output, first=False):
+            next_outputs = step(hparams, prev if first else prev[:, tf.newaxis], past=past)
             logits = next_outputs['logits'][:, -1, :]  / tf.to_float(temperature)
             logits = top_k_logits(logits, k=top_k)
             samples = tf.multinomial(logits, num_samples=1, output_dtype=tf.int32)
             return [
-                tf.concat([past, next_outputs['presents']], axis=-2),
+                next_outputs['presents'] if first else tf.concat([past, next_outputs['presents']], axis=-2),
                 tf.squeeze(samples, axis=[1]),
-                tf.concat([output, samples], axis=1),
+                samples if first else tf.concat([output, samples], axis=1),
             ]
+
+        past, prev, output = body(None, context, None, first=True)
 
         def cond(*args):
             return True
@@ -64,9 +61,9 @@ def sample_sequence(*, hparams, length, start_token=None, batch_size=None, conte
             cond=cond, body=body,
             maximum_iterations=length,
             loop_vars=[
-                context_output['presents'],
-                context[:, -1],
-                context,
+                past,
+                prev,
+                output
             ],
             shape_invariants=[
                 tf.TensorShape(model.past_shape(hparams=hparams, batch_size=batch_size)),
