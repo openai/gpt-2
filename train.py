@@ -27,7 +27,7 @@ parser.add_argument('--combine', metavar='CHARS', type=int, default=50000, help=
 
 parser.add_argument('--batch_size', metavar='SIZE', type=int, default=1, help='Batch size')
 parser.add_argument('--learning_rate', metavar='LR', type=float, default=0.0001, help='Learning rate for Adam')
-parser.add_argument('--accumulate_gradients', metavar='N', type=int, default=5, help='Accumulate gradients across N minibatches.')
+parser.add_argument('--accumulate_gradients', metavar='N', type=int, default=1, help='Accumulate gradients across N minibatches.')
 
 parser.add_argument('--restore_from', type=str, default='latest', help='Either "latest", "fresh", or a path to a checkpoint file')
 parser.add_argument('--run_name', type=str, default='run1', help='Run id. Name of subdirectory in checkpoint/ and samples/')
