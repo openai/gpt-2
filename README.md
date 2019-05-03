@@ -2,7 +2,7 @@
 
 Code and samples from the paper ["Language Models are Unsupervised Multitask Learners"](https://d4mucfpksywv.cloudfront.net/better-language-models/language-models.pdf).
 
-We have currently released small (117M parameter) and medium (345M parameter) versions of GPT-2.
+We have currently released small (117M parameter) and medium (345M parameter) versions of GPT-2.  While we have not released the larger models, we have [released a dataset](https://github.com/openai/gpt-2-output-dataset) for researchers to study their behaviors.
 
 See more details in our [blog post](https://blog.openai.com/better-language-models/).
 
