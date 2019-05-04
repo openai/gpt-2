@@ -8,10 +8,12 @@ import os
 import numpy as np
 import tensorflow as tf
 import time
+from tensorflow.core.protobuf import rewriter_config_pb2
 
 import model, sample, encoder
 from load_dataset import load_dataset, Sampler
 from accumulate import AccumulatingOptimizer
+import memory_saving_gradients
 
 CHECKPOINT_DIR = 'checkpoint'
 SAMPLE_DIR = 'samples'
@@ -28,6 +30,8 @@ parser.add_argument('--combine', metavar='CHARS', type=int, default=50000, help=
 parser.add_argument('--batch_size', metavar='SIZE', type=int, default=1, help='Batch size')
 parser.add_argument('--learning_rate', metavar='LR', type=float, default=0.0001, help='Learning rate for Adam')
 parser.add_argument('--accumulate_gradients', metavar='N', type=int, default=1, help='Accumulate gradients across N minibatches.')
+parser.add_argument('--memory_saving_gradients', default=False, action='store_true', help='Use gradient checkpointing to reduce vram usage.')
+parser.add_argument('--only_train_transformer_layers', default=False, action='store_true', help='Restrict training to the transformer blocks.')
 
 parser.add_argument('--restore_from', type=str, default='latest', help='Either "latest", "fresh", or a path to a checkpoint file')
 parser.add_argument('--run_name', type=str, default='run1', help='Run id. Name of subdirectory in checkpoint/ and samples/')
@@ -55,8 +59,13 @@ def main():
         raise ValueError(
             "Can't get samples longer than window size: %s" % hparams.n_ctx)
 
+    if args.model_name == '345M':
+        args.memory_saving_gradients = True
+        args.only_train_transformer_layers = True
+
     config = tf.ConfigProto()
     config.gpu_options.allow_growth = True
+    config.graph_options.rewrite_options.layout_optimizer = rewriter_config_pb2.RewriterConfig.OFF
     with tf.Session(config=config) as sess:
         context = tf.placeholder(tf.int32, [args.batch_size, None])
         output = model.model(hparams=hparams, X=context)
@@ -72,8 +81,11 @@ def main():
             temperature=1.0,
             top_k=40)
 
-        train_vars = [v for v in tf.trainable_variables() if 'model' in v.name]
+        all_vars = [v for v in tf.trainable_variables() if 'model' in v.name]
+        train_vars = [v for v in all_vars if '/h' in v.name] if args.only_train_transformer_layers else all_vars
         if args.accumulate_gradients > 1:
+            if args.memory_saving_gradients:
+                exit("Memory saving gradients are not implemented for gradient accumulation yet.")
             opt = AccumulatingOptimizer(
                 opt=tf.train.AdamOptimizer(learning_rate=args.learning_rate),
                 var_list=train_vars)
@@ -82,16 +94,20 @@ def main():
             opt_apply = opt.apply_gradients()
             summary_loss = tf.summary.scalar('loss', opt_apply)
         else:
-            opt_apply = tf.train.AdamOptimizer(
-                learning_rate=args.learning_rate).minimize(
-                    loss, var_list=train_vars)
+            opt = tf.train.AdamOptimizer(learning_rate=args.learning_rate)
+            if args.memory_saving_gradients:
+                opt_grads = memory_saving_gradients.gradients(loss, train_vars)
+            else:
+                opt_grads = tf.gradients(loss, train_vars)
+            opt_grads = list(zip(opt_grads, train_vars))
+            opt_apply = opt.apply_gradients(opt_grads)
             summary_loss = tf.summary.scalar('loss', loss)
 
         summary_log = tf.summary.FileWriter(
             os.path.join(CHECKPOINT_DIR, args.run_name))
 
         saver = tf.train.Saver(
-            var_list=train_vars,
+            var_list=all_vars,
             max_to_keep=5,
             keep_checkpoint_every_n_hours=2)
         sess.run(tf.global_variables_initializer())
