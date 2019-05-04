@@ -1,7 +1,6 @@
 import glob
 import numpy as np
 import os
-import random
 import tensorflow as tf
 import tqdm
 
@@ -62,12 +61,13 @@ class Sampler(object):
     'Fairly' means that the distribution is the same as sampling from one concatenated chunk,
     but without crossing chunk boundaries."""
 
-    def __init__(self, chunks):
+    def __init__(self, chunks, seed=None):
         self.chunks = chunks
         self.total_size = sum(chunk.shape[0] for chunk in chunks)
         self.boundaries = [0]
         for i in range(len(chunks)):
             self.boundaries.append(self.boundaries[-1] + chunks[i].shape[0])
+        self.rs = np.random.RandomState(seed=seed)
 
     def sample(self, length):
         assert length < self.total_size // len(
@@ -75,7 +75,7 @@ class Sampler(object):
         ), "Dataset files are too small to sample {} tokens at a time".format(
             length)
         while True:
-            index = random.randint(0, self.total_size - length - 1)
+            index = self.rs.randint(0, self.total_size - length - 1)
             i = binary_search(lambda j: self.boundaries[j] > index, 0,
                               len(self.boundaries) - 1) - 1
             if self.boundaries[i + 1] > index + length:

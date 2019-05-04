@@ -8,6 +8,7 @@ import os
 import numpy as np
 import tensorflow as tf
 import time
+import tqdm
 from tensorflow.core.protobuf import rewriter_config_pb2
 
 import model, sample, encoder
@@ -39,6 +40,11 @@ parser.add_argument('--sample_every', metavar='N', type=int, default=100, help='
 parser.add_argument('--sample_length', metavar='TOKENS', type=int, default=1023, help='Sample this many tokens')
 parser.add_argument('--sample_num', metavar='N', type=int, default=1, help='Generate this many samples')
 parser.add_argument('--save_every', metavar='N', type=int, default=1000, help='Write a checkpoint every N steps')
+
+parser.add_argument('--val_dataset', metavar='PATH', type=str, default=None, help='Dataset for validation loss, defaults to --dataset.')
+parser.add_argument('--val_batch_size', metavar='SIZE', type=int, default=2, help='Batch size for validation.')
+parser.add_argument('--val_batch_count', metavar='N', type=int, default=40, help='Number of batches for validation.')
+parser.add_argument('--val_every', metavar='STEPS', type=int, default=0, help='Calculate validation loss every STEPS steps.')
 
 
 def maketree(path):
@@ -72,6 +78,15 @@ def main():
         loss = tf.reduce_mean(
             tf.nn.sparse_softmax_cross_entropy_with_logits(
                 labels=context[:, 1:], logits=output['logits'][:, :-1]))
+
+        if args.val_every > 0:
+            val_context = tf.placeholder(tf.int32, [args.val_batch_size, None])
+            val_output = model.model(hparams=hparams, X=val_context)
+            val_loss = tf.reduce_mean(
+                tf.nn.sparse_softmax_cross_entropy_with_logits(
+                    labels=val_context[:, 1:], logits=val_output['logits'][:, :-1]))
+            val_loss_summary = tf.summary.scalar('val_loss', val_loss)
+
 
         tf_sample = sample.sample_sequence(
             hparams=hparams,
@@ -130,8 +145,17 @@ def main():
         print('Loading dataset...')
         chunks = load_dataset(enc, args.dataset, args.combine)
         data_sampler = Sampler(chunks)
+        if args.val_every > 0:
+            val_chunks = load_dataset(enc, args.val_dataset, args.combine) if args.val_dataset else chunks
         print('dataset has', data_sampler.total_size, 'tokens')
         print('Training...')
+
+        if args.val_every > 0:
+            # Sample from validation set once with fixed seed to make
+            # it deterministic during training as well as across runs.
+            val_data_sampler = Sampler(val_chunks, seed=1)
+            val_batches = [[val_data_sampler.sample(1024) for _ in range(args.val_batch_size)]
+                           for _ in range(args.val_batch_count)]
 
         counter = 1
         counter_path = os.path.join(CHECKPOINT_DIR, args.run_name, 'counter')
@@ -155,6 +179,7 @@ def main():
                 fp.write(str(counter) + '\n')
 
         def generate_samples():
+            print('Generating samples...')
             context_tokens = data_sampler.sample(1)
             all_text = []
             index = 0
@@ -175,8 +200,25 @@ def main():
                                  'samples-{}').format(counter), 'w') as fp:
                 fp.write('\n'.join(all_text))
 
+        def validation():
+            print('Calculating validation loss...')
+            losses = []
+            for batch in tqdm.tqdm(val_batches):
+                losses.append(sess.run(val_loss, feed_dict={val_context: batch}))
+            v_val_loss = np.mean(losses)
+            v_summary = sess.run(val_loss_summary, feed_dict={val_loss: v_val_loss})
+            summary_log.add_summary(v_summary, counter)
+            summary_log.flush()
+            print(
+                '[{counter} | {time:2.2f}] validation loss = {loss:2.2f}'
+                .format(
+                    counter=counter,
+                    time=time.time() - start_time,
+                    loss=v_val_loss))
+
         def sample_batch():
             return [data_sampler.sample(1024) for _ in range(args.batch_size)]
+
 
         avg_loss = (0.0, 0.0)
         start_time = time.time()
@@ -187,6 +229,8 @@ def main():
                     save()
                 if counter % args.sample_every == 0:
                     generate_samples()
+                if args.val_every > 0 and (counter % args.val_every == 0 or counter == 1):
+                    validation()
 
                 if args.accumulate_gradients > 1:
                     sess.run(opt_reset)
