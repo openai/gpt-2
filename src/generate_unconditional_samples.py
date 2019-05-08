@@ -16,7 +16,7 @@ def sample_model(
     length=None,
     temperature=1,
     top_k=0,
-    models_dir='../models',
+    models_dir='models',
 ):
     """
     Run the sample_model
