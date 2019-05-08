@@ -39,6 +39,7 @@ def sample_model(
      :models_dir : path to parent folder containing model subfolders
      (i.e. contains the <model_name> folder)
     """
+    models_dir = os.path.expanduser(os.path.expandvars(models_dir))
     enc = encoder.get_encoder(model_name, models_dir)
     hparams = model.default_hparams()
     with open(os.path.join(models_dir, model_name, 'hparams.json')) as f:
