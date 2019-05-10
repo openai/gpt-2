@@ -64,11 +64,30 @@ def interact_model(
         ckpt = tf.train.latest_checkpoint(os.path.join('models', model_name))
         saver.restore(sess, ckpt)
 
+        print("Type ?help for available commands")
         while True:
             raw_text = input("Model prompt >>> ")
-            while not raw_text:
-                print('Prompt should not be empty!')
-                raw_text = input("Model prompt >>> ")
+
+            # if prompt is empty notify user, and restart loop
+            if not raw_text:
+                print("Prompt should not be empty! Type ?help or ?h for available commands")
+                continue
+            
+            if raw_text == "?help" or raw_text == "?h":
+                print("Available Commands:\n\n?help - Displays Commands. Alias: ?h\n#kill - Ends GPT-2 Process\n")
+                continue
+
+            # if user types #kill break the loop. Cleaner way to close application
+            if raw_text == "#kill":
+                check = input("Are you sure you want to end GPT-2? [Y/n] ").lower()
+                if check == "y":
+                    print("Ending GPT-2")
+                    break
+                elif check != "n":
+                    print("Please Input Valid Command")
+            continue
+
+            
             context_tokens = enc.encode(raw_text)
             generated = 0
             for _ in range(nsamples // batch_size):
