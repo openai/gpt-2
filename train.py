@@ -33,6 +33,7 @@ parser.add_argument('--learning_rate', metavar='LR', type=float, default=0.0001,
 parser.add_argument('--accumulate_gradients', metavar='N', type=int, default=1, help='Accumulate gradients across N minibatches.')
 parser.add_argument('--memory_saving_gradients', default=False, action='store_true', help='Use gradient checkpointing to reduce vram usage.')
 parser.add_argument('--only_train_transformer_layers', default=False, action='store_true', help='Restrict training to the transformer blocks.')
+parser.add_argument('--optimizer', type=str, default='adam', help='Optimizer. <adam|sgd>.')
 
 parser.add_argument('--restore_from', type=str, default='latest', help='Either "latest", "fresh", or a path to a checkpoint file')
 parser.add_argument('--run_name', type=str, default='run1', help='Run id. Name of subdirectory in checkpoint/ and samples/')
@@ -67,7 +68,8 @@ def main():
 
     if args.model_name == '345M':
         args.memory_saving_gradients = True
-        args.only_train_transformer_layers = True
+        if args.optimizer == 'adam':
+            args.only_train_transformer_layers = True
 
     config = tf.ConfigProto()
     config.gpu_options.allow_growth = True
@@ -98,18 +100,25 @@ def main():
 
         all_vars = [v for v in tf.trainable_variables() if 'model' in v.name]
         train_vars = [v for v in all_vars if '/h' in v.name] if args.only_train_transformer_layers else all_vars
+
+        if args.optimizer == 'adam':
+            opt = tf.train.AdamOptimizer(learning_rate=args.learning_rate)
+        elif args.optimizer == 'sgd':
+            opt = tf.train.GradientDescentOptimizer(learning_rate=args.learning_rate)
+        else:
+            exit('Bad optimizer:', args.optimizer)
+
         if args.accumulate_gradients > 1:
             if args.memory_saving_gradients:
                 exit("Memory saving gradients are not implemented for gradient accumulation yet.")
             opt = AccumulatingOptimizer(
-                opt=tf.train.AdamOptimizer(learning_rate=args.learning_rate),
+                opt=opt,
                 var_list=train_vars)
             opt_reset = opt.reset()
             opt_compute = opt.compute_gradients(loss)
             opt_apply = opt.apply_gradients()
             summary_loss = tf.summary.scalar('loss', opt_apply)
         else:
-            opt = tf.train.AdamOptimizer(learning_rate=args.learning_rate)
             if args.memory_saving_gradients:
                 opt_grads = memory_saving_gradients.gradients(loss, train_vars)
             else:
