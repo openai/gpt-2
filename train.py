@@ -127,6 +127,9 @@ def main():
             opt_apply = opt.apply_gradients(opt_grads)
             summary_loss = tf.summary.scalar('loss', loss)
 
+        summary_lr = tf.summary.scalar('learning_rate', args.learning_rate)
+        summaries = tf.summary.merge([summary_lr, summary_loss])
+
         summary_log = tf.summary.FileWriter(
             os.path.join(CHECKPOINT_DIR, args.run_name))
 
@@ -246,10 +249,10 @@ def main():
                     for _ in range(args.accumulate_gradients):
                         sess.run(
                             opt_compute, feed_dict={context: sample_batch()})
-                    (v_loss, v_summary) = sess.run((opt_apply, summary_loss))
+                    (v_loss, v_summary) = sess.run((opt_apply, summaries))
                 else:
                     (_, v_loss, v_summary) = sess.run(
-                        (opt_apply, loss, summary_loss),
+                        (opt_apply, loss, summaries),
                         feed_dict={context: sample_batch()})
 
                 summary_log.add_summary(v_summary, counter)
