@@ -110,7 +110,7 @@ def main():
             context=context,
             batch_size=args.batch_size,
             temperature=1.0,
-            top_k=args.top_k
+            top_k=args.top_k,
             top_p=args.top_p)
 
         all_vars = [v for v in tf.trainable_variables() if 'model' in v.name]
