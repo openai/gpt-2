@@ -34,6 +34,7 @@ parser.add_argument('--accumulate_gradients', metavar='N', type=int, default=1, 
 parser.add_argument('--memory_saving_gradients', default=False, action='store_true', help='Use gradient checkpointing to reduce vram usage.')
 parser.add_argument('--only_train_transformer_layers', default=False, action='store_true', help='Restrict training to the transformer blocks.')
 parser.add_argument('--optimizer', type=str, default='adam', help='Optimizer. <adam|sgd>.')
+parser.add_argument('--noise', type=float, default=0.0, help='Add noise to input training data to regularize against typos.')
 
 parser.add_argument('--restore_from', type=str, default='latest', help='Either "latest", "fresh", or a path to a checkpoint file')
 parser.add_argument('--run_name', type=str, default='run1', help='Run id. Name of subdirectory in checkpoint/ and samples/')
@@ -53,6 +54,15 @@ def maketree(path):
         os.makedirs(path)
     except:
         pass
+
+
+def randomize(context, hparams, p):
+    if p > 0:
+        mask = tf.random.uniform(shape=tf.shape(context)) < p
+        noise = tf.random.uniform(shape=tf.shape(context), minval=0, maxval=hparams.n_vocab, dtype=tf.int32)
+        return tf.where(mask, noise, context)
+    else:
+        return context
 
 
 def main():
@@ -76,7 +86,8 @@ def main():
     config.graph_options.rewrite_options.layout_optimizer = rewriter_config_pb2.RewriterConfig.OFF
     with tf.Session(config=config) as sess:
         context = tf.placeholder(tf.int32, [args.batch_size, None])
-        output = model.model(hparams=hparams, X=context)
+        context_in = randomize(context, hparams, args.noise)
+        output = model.model(hparams=hparams, X=context_in)
         loss = tf.reduce_mean(
             tf.nn.sparse_softmax_cross_entropy_with_logits(
                 labels=context[:, 1:], logits=output['logits'][:, :-1]))
