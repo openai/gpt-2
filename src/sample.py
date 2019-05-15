@@ -22,7 +22,21 @@ def top_k_logits(logits, k):
     )
 
 
-def sample_sequence(*, hparams, length, start_token=None, batch_size=None, context=None, temperature=1, top_k=0):
+def top_p_logits(logits, p):
+    with tf.variable_scope('top_p_logits'):
+        logits_sort = tf.sort(logits, direction='DESCENDING')
+        probs_sort = tf.nn.softmax(logits_sort)
+        probs_sums = tf.cumsum(probs_sort, axis=1, exclusive=True)
+        logits_masked = tf.where(probs_sums < p, logits_sort, tf.ones_like(logits_sort)*1000) # [batchsize, vocab]
+        min_logits = tf.reduce_min(logits_masked, axis=1) # [batchsize]
+        return tf.where(
+            logits < min_logits,
+            tf.ones_like(logits, dtype=logits.dtype) * -1e10,
+            logits,
+        )
+
+
+def sample_sequence(*, hparams, length, start_token=None, batch_size=None, context=None, temperature=1, top_k=0, top_p=0.0):
     if start_token is None:
         assert context is not None, 'Specify exactly one of start_token and context!'
     else:
@@ -49,7 +63,10 @@ def sample_sequence(*, hparams, length, start_token=None, batch_size=None, conte
         def body(past, prev, output):
             next_outputs = step(hparams, prev[:, tf.newaxis], past=past)
             logits = next_outputs['logits'][:, -1, :]  / tf.to_float(temperature)
-            logits = top_k_logits(logits, k=top_k)
+            if top_p > 0.0:
+                logits = top_p_logits(logits, p=top_p)
+            else:
+                logits = top_k_logits(logits, k=top_k)
             samples = tf.multinomial(logits, num_samples=1, output_dtype=tf.int32)
             return [
                 tf.concat([past, next_outputs['presents']], axis=-2),

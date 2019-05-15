@@ -36,6 +36,9 @@ parser.add_argument('--only_train_transformer_layers', default=False, action='st
 parser.add_argument('--optimizer', type=str, default='adam', help='Optimizer. <adam|sgd>.')
 parser.add_argument('--noise', type=float, default=0.0, help='Add noise to input training data to regularize against typos.')
 
+parser.add_argument('--top_k', type=int, default=40, help='K for top-k sampling.')
+parser.add_argument('--top_p', type=float, default=0.0, help='P for top-p sampling. Overrides top_k if set > 0.')
+
 parser.add_argument('--restore_from', type=str, default='latest', help='Either "latest", "fresh", or a path to a checkpoint file')
 parser.add_argument('--run_name', type=str, default='run1', help='Run id. Name of subdirectory in checkpoint/ and samples/')
 parser.add_argument('--sample_every', metavar='N', type=int, default=100, help='Generate samples every N steps')
@@ -107,7 +110,8 @@ def main():
             context=context,
             batch_size=args.batch_size,
             temperature=1.0,
-            top_k=40)
+            top_k=args.top_k
+            top_p=args.top_p)
 
         all_vars = [v for v in tf.trainable_variables() if 'model' in v.name]
         train_vars = [v for v in all_vars if '/h' in v.name] if args.only_train_transformer_layers else all_vars
