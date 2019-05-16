@@ -17,6 +17,7 @@ def sample_model(
     temperature=1,
     top_k=0,
     models_dir='models',
+    top_p=0.0
 ):
     """
     Run the sample_model
@@ -38,6 +39,9 @@ def sample_model(
      special setting meaning no restrictions. 40 generally is a good value.
      :models_dir : path to parent folder containing model subfolders
      (i.e. contains the <model_name> folder)
+    :top_p=0.0 : Float value controlling diversity. Implements nucleus (top-p)
+     sampling, described in arXiv:1904.09751 [cs.CL], overriding top_k if set.
+     A good setting is 0.9.
     """
     models_dir = os.path.expanduser(os.path.expandvars(models_dir))
     enc = encoder.get_encoder(model_name, models_dir)
@@ -58,7 +62,7 @@ def sample_model(
             hparams=hparams, length=length,
             start_token=enc.encoder['<|endoftext|>'],
             batch_size=batch_size,
-            temperature=temperature, top_k=top_k
+            temperature=temperature, top_k=top_k, top_p=top_p
         )[:, 1:]
 
         saver = tf.train.Saver()
@@ -76,4 +80,3 @@ def sample_model(
 
 if __name__ == '__main__':
     fire.Fire(sample_model)
-

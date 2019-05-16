@@ -16,7 +16,8 @@ def interact_model(
     length=None,
     temperature=1,
     top_k=0,
-    models_dir='models',    
+    models_dir='models',
+    top_p=0.0
 ):
     """
     Interactively run the model
@@ -36,7 +37,10 @@ def interact_model(
      while 40 means 40 words are considered at each step. 0 (default) is a
      special setting meaning no restrictions. 40 generally is a good value.
      :models_dir : path to parent folder containing model subfolders
-     (i.e. contains the <model_name> folder)     
+     (i.e. contains the <model_name> folder)
+    :top_p=0.0 : Float value controlling diversity. Implements nucleus (top-p)
+     sampling, described in arXiv:1904.09751 [cs.CL], overriding top_k if set.
+     A good setting is 0.9.
     """
     models_dir = os.path.expanduser(os.path.expandvars(models_dir))
     if batch_size is None:
@@ -61,7 +65,7 @@ def interact_model(
             hparams=hparams, length=length,
             context=context,
             batch_size=batch_size,
-            temperature=temperature, top_k=top_k
+            temperature=temperature, top_k=top_k, top_p=top_p
         )
 
         saver = tf.train.Saver()
@@ -88,4 +92,3 @@ def interact_model(
 
 if __name__ == '__main__':
     fire.Fire(interact_model)
-
