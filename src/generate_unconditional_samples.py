@@ -24,7 +24,7 @@ def sample_model(
     :seed=None : Integer seed for random number generators, fix seed to
      reproduce results
     :nsamples=0 : Number of samples to return, if 0, continues to
-     generate samples indefinately.
+     generate samples indefinitely.
     :batch_size=1 : Number of batches (only affects speed/memory).
     :length=None : Number of tokens in generated text, if None (default), is
      determined by model hyperparameters
