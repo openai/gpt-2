@@ -1,2 +1,3 @@
 __pycache__
+.mypy_cache/
 models/

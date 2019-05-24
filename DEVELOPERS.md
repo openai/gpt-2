@@ -28,6 +28,7 @@ pip3 install -r requirements.txt
 Download the model data
 ```
 python3 download_model.py 117M
+python3 download_model.py 345M
 ```
 
 ## Docker Installation
