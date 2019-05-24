@@ -49,10 +49,10 @@ def sample_sequence(*, hparams, length, start_token=None, batch_size=None, conte
             return [
                 next_outputs['presents'] if first else tf.concat([past, next_outputs['presents']], axis=-2),
                 tf.squeeze(samples, axis=[1]),
-                samples if first else tf.concat([output, samples], axis=1),
+                tf.concat([output, samples], axis=1),
             ]
 
-        past, prev, output = body(None, context, None, first=True)
+        past, prev, output = body(None, context, context, first=True)
 
         def cond(*args):
             return True
