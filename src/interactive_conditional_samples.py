@@ -69,11 +69,17 @@ def interact_model(
         saver.restore(sess, ckpt)
 
         while True:
-            raw_text = input("Model prompt >>> ")
-            while not raw_text:
-                print('Prompt should not be empty!')
+            raw_text = None
+            context_length = 0
+            while not raw_text or context_length <= 0 or context_length > length:
                 raw_text = input("Model prompt >>> ")
-            context_tokens = enc.encode(raw_text)
+                context_tokens = enc.encode(raw_text)
+                context_length = len(context_tokens)
+                if not raw_text:
+                    print('Prompt should not be empty!')
+                elif context_length <= 0 or context_length > length:
+                    print('Number of tokens should be in range of 1 - ' + str(length) + ', got: ' + str(context_length) + '!')
+
             generated = 0
             for _ in range(nsamples // batch_size):
                 out = sess.run(output, feed_dict={
