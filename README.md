@@ -48,6 +48,8 @@ PYTHONPATH=src ./encode.py <file|directory|glob> /path/to/encoded.npz
 PYTHONPATH=src ./train.py --dataset /path/to/encoded.npz
 ```
 
+Make sure `cudnn` is installed. [Some have reported](https://github.com/nshepperd/gpt-2/issues/8) that `train.py` runs without it but has worse memory usage and might OOM.
+
 ### Gradient Checkpointing
 
 https://github.com/openai/gradient-checkpointing is included to reduce the memory requirements of the model, and can be enabled by `--memory_saving_gradients`. The checkpoints are currently chosen manually (poorly) by just adding layer 10 to the 'checkpoints' collection in model.py. `--memory_saving_gradients` is enabled by default for training the 345M model.
