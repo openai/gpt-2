@@ -27,6 +27,7 @@ parser = argparse.ArgumentParser(
 parser.add_argument('--dataset', metavar='PATH', type=str, required=True, help='Input file, directory, or glob pattern (utf-8 text, or preencoded .npz files).')
 parser.add_argument('--model_name', metavar='MODEL', type=str, default='117M', help='Pretrained model name')
 parser.add_argument('--combine', metavar='CHARS', type=int, default=50000, help='Concatenate input files with <|endoftext|> separator into chunks of this minimum size')
+parser.add_argument('--encoding', type=str, default='utf-8', help='Set the encoding for reading and writing files.')
 
 parser.add_argument('--batch_size', metavar='SIZE', type=int, default=1, help='Batch size')
 parser.add_argument('--learning_rate', metavar='LR', type=float, default=0.00002, help='Learning rate for Adam')
@@ -170,10 +171,13 @@ def main():
         saver.restore(sess, ckpt)
 
         print('Loading dataset...')
-        chunks = load_dataset(enc, args.dataset, args.combine)
+        chunks = load_dataset(enc, args.dataset, args.combine, encoding=args.encoding)
         data_sampler = Sampler(chunks)
         if args.val_every > 0:
-            val_chunks = load_dataset(enc, args.val_dataset, args.combine) if args.val_dataset else chunks
+            if args.val_dataset:
+                val_chunks = load_dataset(enc, args.val_dataset, args.combine, encoding=args.encoding)
+            else:
+                val_chunks = chunks
         print('dataset has', data_sampler.total_size, 'tokens')
         print('Training...')
 
@@ -224,7 +228,7 @@ def main():
             maketree(os.path.join(SAMPLE_DIR, args.run_name))
             with open(
                     os.path.join(SAMPLE_DIR, args.run_name,
-                                 'samples-{}').format(counter), 'w') as fp:
+                                 'samples-{}').format(counter), 'w', encoding=args.encoding) as fp:
                 fp.write('\n'.join(all_text))
 
         def validation():
