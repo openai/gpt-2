@@ -12,6 +12,8 @@ See more details in our [blog post](https://blog.openai.com/better-language-mode
 
 This repository is meant to be a starting point for researchers and engineers to experiment with GPT-2.
 
+For basic information, see our [model card](./model_card.md).
+
 ### Some caveats
 
 - GPT-2 models' robustness and worst case behaviors are not well-understood.  As with any machine-learned model, carefully evaluate GPT-2 for your use case, especially if used without fine-tuning or in safety-critical applications where reliability is important.
