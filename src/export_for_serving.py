@@ -17,7 +17,6 @@ def export_for_serving(
     length=None,
     temperature=1,
     top_k=0,
-    exports_dir='models/exports',
     models_dir='models'
 ):
     """
@@ -65,7 +64,7 @@ def export_for_serving(
         ckpt = tf.train.latest_checkpoint(os.path.join(models_dir, model_name))
         saver.restore(sess, ckpt)
 
-        export_dir=os.path.join(exports_dir, model_name, str(time.time()).split('.')[0])
+        export_dir=os.path.join(models_dir, model_name, "export", str(time.time()).split('.')[0])
         if not os.path.isdir(export_dir):
             os.makedirs(export_dir)
 
