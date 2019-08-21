@@ -85,3 +85,10 @@ To check flag descriptions, use:
 ```
 python3 src/interactive_conditional_samples.py -- --help
 ```
+
+## Export model for TF Serving
+
+To export the model for use with TF Serving, you can use:
+```
+python3 src/export_for_serving.py --top_k 40
+```
