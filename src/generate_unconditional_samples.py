@@ -16,6 +16,7 @@ def sample_model(
     length=None,
     temperature=1,
     top_k=0,
+    top_p=1,
     models_dir='models',
 ):
     """
@@ -58,7 +59,7 @@ def sample_model(
             hparams=hparams, length=length,
             start_token=enc.encoder['<|endoftext|>'],
             batch_size=batch_size,
-            temperature=temperature, top_k=top_k
+            temperature=temperature, top_k=top_k, top_p=top_p
         )[:, 1:]
 
         saver = tf.train.Saver()
