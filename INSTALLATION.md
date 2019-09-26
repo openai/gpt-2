@@ -15,14 +15,14 @@
 6. Run this command to install tensorflow-gpu:
    - ```python 3 -m pip install --user tensorflow-gpu```
 7. Run this command to install requirements.txt after moving into the software's directory```
-   - ```cd C:\Users\%username%\Documents\gpt-2-master```
+   - ```cd C:\Users\YOURUSERNAME\Documents\gpt-2-master```
    - ```python3 -m pip install --user -r requirements.txt```
 8. Download the model of your choice:
    - ```python3 download_model.py 124M```
    - ```python3 download_model.py 355M``` 
    - ```python3 download_model.py 774M```
 9. Run the interactive sample, I reccomend making a backup of the models directory:
-   - ```xcopy C:\Users\%username%\Documents\gpt-2-master\models C:\Users\%username%\Documents\modelsbackup /O /X /E /H /K```
+   - ```xcopy C:\Users\YOURUSERNAME\Documents\gpt-2-master\models C:\Users\YOURUSERNAME\Documents\gpt-2-master\modelsbackup /O /X /E /H /K```
    - ```python3 src/interactive_conditional_samples.py```
 10. Adjust settings as needed.
 
