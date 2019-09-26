@@ -28,7 +28,7 @@
 
 ### Quick Ubuntu 18.04 install instructions:
 - [x] Nvidia GPU Support
-- [] AMD GPU Support
+- [ ] AMD GPU Support
 - [x] CPU Support
 1. Update apt:
     - ```apt update```
