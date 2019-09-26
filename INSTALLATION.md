@@ -21,7 +21,8 @@
    - ```python3 download_model.py 124M```
    - ```python3 download_model.py 355M``` 
    - ```python3 download_model.py 774M```
-9. Run the interactive sample, I reccomend making a backup of the models directory:
+9. Install Cuda: https://developer.nvidia.com/cuda-downloads
+10. Run the interactive sample, I reccomend making a backup of the models directory:
    - ```xcopy C:\Users\YOURUSERNAME\Documents\gpt-2-master\models C:\Users\YOURUSERNAME\Documents\gpt-2-master\modelsbackup /O /X /E /H /K```
    - ```python3 src/interactive_conditional_samples.py```
 10. Adjust settings as needed.
@@ -47,7 +48,8 @@ already installed.):
    - ```python3 download_model.py 124M```
    - ```python3 download_model.py 355M``` 
    - ```python3 download_model.py 774M```
-7. Run the interactive sample, I reccomend making a backup of the models directory:
+8. Install cuda if you are running on a GPU: https://developer.nvidia.com/cuda-downloads
+9. Run the interactive sample, I reccomend making a backup of the models directory:
     - ```cp models modelsbackup -R```
     - ```python3 src/interactive_conditional_samples.py```
-8. Adjust settings as needed.
+10. Adjust settings as needed.
