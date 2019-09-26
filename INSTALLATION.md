@@ -9,7 +9,7 @@
 1. Download and install python3 for Microsoft Windows: https://www.python.org/downloads/windows/
 2. Install Visual C++ Build Tools: https://visualstudio.microsoft.com/visual-cpp-build-tools/
 3. Download a .zip of the gpt-2 software: https://github.com/openai/gpt-2/archive/master.zip
-4. Open the zip, copy the software to an easily accessible folder i.e. C:\Users\[your username]\Documents\gpt-2-master
+4. Open the zip, copy the software to an easily accessible folder i.e. C:\Users\yourusername\Documents\gpt-2-master
 5. Open PowerShell: Start menu - > right-click powershell (or command prompt) -> Run as Administrator
 6. Type python3 in the window, press enter and a pop-up of the Microsoft Store will open, install Python3 through the Microsoft Store.
 6. Run this command to install tensorflow-gpu:
