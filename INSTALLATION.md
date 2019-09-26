@@ -1,6 +1,6 @@
 # Installation instructions
 
-##Without docker:
+## Without docker:
 
 ### Quick Windows 10 install instructions:
 - [x] Nvidia GPU Support
