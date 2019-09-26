@@ -48,8 +48,8 @@ already installed.):
    - ```python3 download_model.py 124M```
    - ```python3 download_model.py 355M``` 
    - ```python3 download_model.py 774M```
-8. Install cuda if you are running on a GPU: https://developer.nvidia.com/cuda-downloads
-9. Run the interactive sample, I reccomend making a backup of the models directory:
+7. Install cuda if you are running on a GPU: https://developer.nvidia.com/cuda-downloads
+8. Run the interactive sample, I reccomend making a backup of the models directory:
     - ```cp models modelsbackup -R```
     - ```python3 src/interactive_conditional_samples.py```
-10. Adjust settings as needed.
+9. Adjust settings as needed.
