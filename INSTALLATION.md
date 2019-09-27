@@ -24,7 +24,7 @@
 10. Install Cuda: https://developer.nvidia.com/cuda-downloads
 11. Run the interactive sample, I reccomend making a backup of the models directory:
    - ```xcopy C:\Users\YOURUSERNAME\Documents\gpt-2-master\models C:\Users\YOURUSERNAME\Documents\gpt-2-master\modelsbackup /O /X /E /H /K```
-   - ```python3 src/interactive_conditional_samples.py```
+   - ```python src/interactive_conditional_samples.py```
 10. Adjust settings as needed.
 
 ### Quick Ubuntu 18.04 install instructions:
