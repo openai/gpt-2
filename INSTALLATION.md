@@ -26,7 +26,6 @@
 12. Run the interactive sample, I reccomend making a backup of the models directory:
    - ```xcopy C:\Users\YOURUSERNAME\Documents\gpt-2-master\models C:\Users\YOURUSERNAME\Documents\gpt-2-master\modelsbackup /O /X /E /H /K```
    - ```python src/interactive_conditional_samples.py```
-10. Adjust settings as needed.
 
 ### Quick Ubuntu 18.04 install instructions:
 - [x] Nvidia GPU Support
@@ -54,4 +53,3 @@ already installed.):
 8. Run the interactive sample, I reccomend making a backup of the models directory:
     - ```cp models modelsbackup -R```
     - ```python3 src/interactive_conditional_samples.py```
-9. Adjust settings as needed.
