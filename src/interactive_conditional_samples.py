@@ -16,7 +16,7 @@ def interact_model(
     length=None,
     temperature=1,
     top_k=0,
-    top_p=1,
+    top_p=0.01,
     models_dir='models',
 ):
     """
