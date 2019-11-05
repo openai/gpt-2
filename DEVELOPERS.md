@@ -30,6 +30,7 @@ Download the model data
 python3 download_model.py 124M
 python3 download_model.py 355M
 python3 download_model.py 774M
+python3 download_model.py 1558M
 ```
 
 ## Docker Installation
