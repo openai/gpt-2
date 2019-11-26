@@ -24,7 +24,7 @@ Language model
 [Blog post](https://openai.com/blog/better-language-models/) and [paper](https://d4mucfpksywv.cloudfront.net/better-language-models/language_models_are_unsupervised_multitask_learners.pdf)
 
 ### Where to send questions or comments about the model
-languagequestions@openai.com
+Please use this [Google Form](https://forms.gle/A7WBSbTY2EkKdroPA)
 
 ## Intended Uses:
 
