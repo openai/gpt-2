@@ -55,4 +55,4 @@ We are still considering release of the larger models.
 
 ## License
 
-[MIT](./LICENSE)
+[Modified MIT](./LICENSE)
