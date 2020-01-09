@@ -86,3 +86,13 @@ To check flag descriptions, use:
 ```
 python3 src/interactive_conditional_samples.py -- --help
 ```
+
+## Conditional sample with flask web interface
+
+Lunch the flask server and request it with your text
+```
+# lunch the flask server
+python3 src/flask_conditional_samples.py
+# request it
+http://localhost:5000/api?text=your text hear
+```
