@@ -68,12 +68,14 @@ def interact_model(
         saver = tf.train.Saver()
         ckpt = tf.train.latest_checkpoint(os.path.join(models_dir, model_name))
         saver.restore(sess, ckpt)
-
-        while True:
-            raw_text = input("Model prompt >>> ")
-            while not raw_text:
-                print('Prompt should not be empty!')
-                raw_text = input("Model prompt >>> ")
+        prompts = ["This is the first prompt", "This is the second", "And you can read prefixes from a file too"]
+        for prompt in prompts:
+            raw_text = prompt
+            #raw_text = input("Model prompt >>> ")
+            #while not raw_text:
+                #print('Prompt should not be empty!')
+                #raw_text = input("Model prompt >>> ")
+            
             context_tokens = enc.encode(raw_text)
             generated = 0
             for _ in range(nsamples // batch_size):
