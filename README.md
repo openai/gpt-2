@@ -5,13 +5,11 @@ Reference:  ["Beginner’s Guide to Retrain GPT-2 (117M) to Generate Custom Text
 
 Code from the paper ["Language Models are Unsupervised Multitask Learners"](https://d4mucfpksywv.cloudfront.net/better-language-models/language-models.pdf).
 
-We have currently released small (117M parameter) and medium (345M parameter) versions of GPT-2.  While we have not released the larger models, we have [released a dataset](https://github.com/openai/gpt-2-output-dataset) for researchers to study their behaviors.
-
 See more details in our [blog post](https://blog.openai.com/better-language-models/).
 
 ## Usage
 
-This repository is meant to be a starting point for researchers and engineers to experiment with GPT-2.
+This repository is meant to be a starting point for researchers and engineers to experiment with GPT-2. The rpository is forked from nshepperd who contributed some cool addition to the openai repo (e.g train.py). I have added a method called conditional_model() which is the same as the interactive conditional model except it is a method and return a dictionary which may be easier to work with if you have mutlipule sentences you need to the model to predict on. 
 
 ### Some caveats
 
