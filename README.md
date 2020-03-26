@@ -9,7 +9,9 @@ See more details in our [blog post](https://blog.openai.com/better-language-mode
 
 ## Usage
 
-This repository is meant to be a starting point for researchers and engineers to experiment with GPT-2. The rpository is forked from nshepperd who contributed some cool addition to the openai repo (e.g train.py). I have added a method called conditional_model() which is the same as the interactive conditional model except it is a method and return a dictionary which may be easier to work with if you have mutlipule sentences you need to the model to predict on. 
+This repository is meant to be a starting point for researchers and engineers to experiment with GPT-2.
+
+The repository is forked from nshepperd who contributed some cool addition to the openai repo (e.g train.py). I have added a method called conditional_model() which is the same as the interactive conditional model except it is a method and return a dictionary which may be easier to work with if you have mutlipule sentences you need to the model to predict on. 
 
 ### Some caveats
 
