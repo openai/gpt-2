@@ -5,16 +5,16 @@ import tensorflow as tf
 import model, sample, encoder
 
 def conditional_model(
-    model_name,
-    seed,
-    nsamples,
-    batch_size,
-    length,
-    temperature,
-    top_k,
-    top_p,
-    models_dir,
-    sentences,
+    model_name='345M',
+    seed=None,
+    nsamples=1,
+    batch_size=1,
+    length=None,
+    temperature=1,
+    top_k=40,
+    top_p=0,
+    models_dir='models',
+    sentences=None,
     ):
     """
     Run the model on multilple sentences and return a dict.
@@ -29,7 +29,7 @@ def conditional_model(
      distribution. Lower temperature results in less random completions. As the
      temperature approaches zero, the model will become deterministic and
      repetitive. Higher temperature results in more random completions.
-    :top_k=0 : Integer value controlling diversity. 1 means only 1 word is
+    :top_k=40 : Integer value controlling diversity. 1 means only 1 word is
      considered for each step (token), resulting in deterministic completions,
      while 40 means 40 words are considered at each step. 0 (default) is a
      special setting meaning no restrictions. 40 generally is a good value.
@@ -42,6 +42,9 @@ def conditional_model(
     if batch_size is None:
         batch_size = 1
     assert nsamples % batch_size == 0
+    
+    if sentences == None:
+        raise ValueError('Sentences cannot be None')
 
     enc = encoder.get_encoder(model_name)
     hparams = model.default_hparams()
@@ -69,6 +72,7 @@ def conditional_model(
         saver.restore(sess, ckpt)
         listy = []
         n = 0
+        
         if isinstance(sentences, list):
             for i in sentences:
                 context_tokens = enc.encode(i)
