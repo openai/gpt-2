@@ -1,5 +1,7 @@
 
-Reference:  ["Beginner’s Guide to Retrain GPT-2 (117M) to Generate Custom Text Content"](https://medium.com/@ngwaifoong92/beginners-guide-to-retrain-gpt-2-117m-to-generate-custom-text-content-8bb5363d8b7f)
+To fine-tune your model using Google Colab go to: 
+
+[Step-by-step guide on how to train GPT-2 on books using Google Colab](https://towardsdatascience.com/step-by-step-guide-on-how-to-train-gpt-2-on-books-using-google-colab-b3c6fa15fef0?source=friends_link&sk=c97525bd641aea4b844874e4d445ba83)
 
 # gpt-2
 
