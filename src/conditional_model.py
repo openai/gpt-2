@@ -68,7 +68,7 @@ def conditional_model(
             temperature=temperature, top_k=top_k, top_p=top_p
         )
 
-        saver = tf.train.Saver()
+        saver = tfcV1.train.Saver()
         ckpt = tf.train.latest_checkpoint(os.path.join('models', model_name))
         saver.restore(sess, ckpt)
         listy = []
