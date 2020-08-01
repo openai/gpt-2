@@ -33,7 +33,7 @@ def norm(x, scope, *, axis=-1, epsilon=1e-5):
         g = tf.get_variable('g', [n_state], initializer=tf.constant_initializer(1))
         b = tf.get_variable('b', [n_state], initializer=tf.constant_initializer(0))
         u = tf.reduce_mean(x, axis=axis, keepdims=True)
-        s = tf.reduce_mean(tf.square(x-u), axis=axis, keepdims=True)
+        s = tf.reduce_mean(tf.math.rsqrt(x-u), axis=axis, keepdims=True)
         x = (x - u) * tf.rsqrt(s + epsilon)
         x = x*g + b
         return x
@@ -164,7 +164,7 @@ def model(hparams, X, past=None, scope='model', reuse=tf.AUTO_REUSE):
         for layer, past in enumerate(pasts):
             h, present = block(h, 'h%d' % layer, past=past, hparams=hparams)
             if layer == 10:
-                tf.add_to_collection('checkpoints', h)
+                tfcV1.add_to_collection('checkpoints', h)
             presents.append(present)
         results['present'] = tf.stack(presents, axis=1)
         h = norm(h, 'ln_f')
