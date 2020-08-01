@@ -1,4 +1,5 @@
 import tensorflow as tf
+import numpy as np
 
 import model
 
@@ -10,7 +11,7 @@ def top_k_logits(logits, k):
     def _top_k():
         values, _ = tf.nn.top_k(logits, k=k)
         min_values = values[:, -1, tf.newaxis]
-        return tf.where(
+        return np.where(
             logits < min_values,
             tf.ones_like(logits, dtype=logits.dtype) * -1e10,
             logits,
@@ -62,12 +63,12 @@ def sample_sequence(*, hparams, length, start_token=None, batch_size=None, conte
 
         def body(past, prev, output):
             next_outputs = step(hparams, prev[:, tf.newaxis], past=past)
-            logits = next_outputs['logits'][:, -1, :]  / tf.to_float(temperature)
+            logits = next_outputs['logits'][:, -1, :]  / tf.dtypes.cast(temperature, tf.float32)
             if top_p > 0.0:
                 logits = top_p_logits(logits, p=top_p)
             else:
                 logits = top_k_logits(logits, k=top_k)
-            samples = tf.multinomial(logits, num_samples=1, output_dtype=tf.int32)
+            samples = tf.random.categorical(logits, num_samples=1, output_dtype=tf.int32)
             return [
                 tf.concat([past, next_outputs['presents']], axis=-2),
                 tf.squeeze(samples, axis=[1]),
