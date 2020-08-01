@@ -16,7 +16,9 @@ def sample_model(
     length=None,
     temperature=1,
     top_k=0,
-    top_p=0.0
+    top_p=0.0,
+    models_dir='models',
+
 ):
     """
     Run the sample_model
@@ -38,10 +40,13 @@ def sample_model(
      special setting meaning no restrictions. 40 generally is a good value.
     :top_p=0.0 : Float value controlling diversity. Implements nucleus sampling,
      overriding top_k if set to a value > 0. A good setting is 0.9.
+     :models_dir : path to parent folder containing model subfolders
+     (i.e. contains the <model_name> folder)
     """
-    enc = encoder.get_encoder(model_name)
+    models_dir = os.path.expanduser(os.path.expandvars(models_dir))
+    enc = encoder.get_encoder(model_name, models_dir)
     hparams = model.default_hparams()
-    with open(os.path.join('models', model_name, 'hparams.json')) as f:
+    with open(os.path.join(models_dir, model_name, 'hparams.json')) as f:
         hparams.override_from_dict(json.load(f))
 
     if length is None:
@@ -61,7 +66,7 @@ def sample_model(
         )[:, 1:]
 
         saver = tf.train.Saver()
-        ckpt = tf.train.latest_checkpoint(os.path.join('models', model_name))
+        ckpt = tf.train.latest_checkpoint(os.path.join(models_dir, model_name))
         saver.restore(sess, ckpt)
 
         generated = 0
