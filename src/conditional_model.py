@@ -2,6 +2,7 @@ import json
 import os
 import numpy as np
 import tensorflow as tf
+import tensorflow.compat.v1 as tfcV1
 import model, sample, encoder
 
 def conditional_model(
@@ -56,9 +57,9 @@ def conditional_model(
     elif length > hparams.n_ctx:
         raise ValueError("Can't get samples longer than window size: %s" % hparams.n_ctx)
 
-    with tf.Session(graph=tf.Graph()) as sess:
-        context = tf.placeholder(tf.int32, [batch_size, None])
-        np.random.seed(seed)
+    with tfcV1.Session(graph=tf.Graph()) as sess:
+        context = tfcV1.placeholder(tf.int32, [batch_size, None])
+        tfcV1.random.seed(seed)
         tf.set_random_seed(seed)
         output = sample.sample_sequence(
             hparams=hparams, length=length,
