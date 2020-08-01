@@ -1,5 +1,6 @@
 import numpy as np
 import tensorflow as tf
+import tf.compat.v1 as tfcV1
 from tensorflow.contrib.training import HParams
 
 def default_hparams():
@@ -145,13 +146,13 @@ def positions_for(tokens, past_length):
 
 
 def model(hparams, X, past=None, scope='model', reuse=tf.AUTO_REUSE):
-    with tf.variable_scope(scope, reuse=reuse):
+    with tfcV1.variable_scope(scope, reuse=reuse):
         results = {}
         batch, sequence = shape_list(X)
 
-        wpe = tf.get_variable('wpe', [hparams.n_ctx, hparams.n_embd],
+        wpe = tfcV1.get_variable('wpe', [hparams.n_ctx, hparams.n_embd],
                              initializer=tf.random_normal_initializer(stddev=0.01))
-        wte = tf.get_variable('wte', [hparams.n_vocab, hparams.n_embd],
+        wte = tfcV1.get_variable('wte', [hparams.n_vocab, hparams.n_embd],
                              initializer=tf.random_normal_initializer(stddev=0.02))
         past_length = 0 if past is None else tf.shape(past)[-2]
         h = tf.gather(wte, X) + tf.gather(wpe, positions_for(X, past_length))
