@@ -59,8 +59,8 @@ def conditional_model(
 
     with tfcV1.Session(graph=tf.Graph()) as sess:
         context = tfcV1.placeholder(tf.int32, [batch_size, None])
-        tfcV1.random.seed(seed)
-        tf.set_random_seed(seed)
+        tf.random.seed(seed)
+        tfcV1.set_random_seed(seed)
         output = sample.sample_sequence(
             hparams=hparams, length=length,
             context=context,
