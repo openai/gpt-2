@@ -1,14 +1,19 @@
+
+To fine-tune your model using Google Colab go to: 
+
+[Step-by-step guide on how to train GPT-2 on books using Google Colab](https://towardsdatascience.com/step-by-step-guide-on-how-to-train-gpt-2-on-books-using-google-colab-b3c6fa15fef0?source=friends_link&sk=c97525bd641aea4b844874e4d445ba83)
+
 # gpt-2
 
 Code from the paper ["Language Models are Unsupervised Multitask Learners"](https://d4mucfpksywv.cloudfront.net/better-language-models/language-models.pdf).
-
-We have currently released small (117M parameter) and medium (345M parameter) versions of GPT-2.  While we have not released the larger models, we have [released a dataset](https://github.com/openai/gpt-2-output-dataset) for researchers to study their behaviors.
 
 See more details in our [blog post](https://blog.openai.com/better-language-models/).
 
 ## Usage
 
 This repository is meant to be a starting point for researchers and engineers to experiment with GPT-2.
+
+The repository is forked from nshepperd who contributed some cool addition to the openai repo (e.g train.py). I have added a method called conditional_model() which is the same as the interactive conditional model except it is a method and return a dictionary which may be easier to work with if you have mutlipule sentences you need to the model to predict on. 
 
 ### Some caveats
 
@@ -29,6 +34,58 @@ See [DEVELOPERS.md](./DEVELOPERS.md)
 ## Contributors
 
 See [CONTRIBUTORS.md](./CONTRIBUTORS.md)
+
+## Fine tuning on custom datasets
+
+To retrain GPT-2 117M model on a custom text dataset:
+
+```
+PYTHONPATH=src ./train.py --dataset <file|directory|glob>
+```
+
+If you want to precompute the dataset's encoding for multiple runs, you can instead use:
+
+```
+PYTHONPATH=src ./encode.py <file|directory|glob> /path/to/encoded.npz
+PYTHONPATH=src ./train.py --dataset /path/to/encoded.npz
+```
+
+Make sure `cudnn` is installed. [Some have reported](https://github.com/nshepperd/gpt-2/issues/8) that `train.py` runs without it but has worse memory usage and might OOM.
+
+### Gradient Checkpointing
+
+https://github.com/openai/gradient-checkpointing is included to reduce the memory requirements of the model, and can be enabled by `--memory_saving_gradients`. The checkpoints are currently chosen manually (poorly) by just adding layer 10 to the 'checkpoints' collection in model.py. `--memory_saving_gradients` is enabled by default for training the 345M model.
+
+### Validation loss
+
+Set `--val_every` to a number of steps `N > 0`, and "validation" loss against a fixed sample of the dataset will be calculated every N steps to get a better sense of training progress. N around 200 suggested. You can set `--val_dataset` to choose a separate validation dataset, otherwise it defaults to a sample from the train dataset (so not a real cross-validation loss!).
+
+### Optimizer
+
+You can use SGD instead of Adam with `--optimizer sgd`. This also helps conserve memory when training the 345M model. Note: the learning rate needs to be adjusted for SGD, due to not having Adam's gradient normalization (0.0006 seems to be a good number from some experiments).
+
+### Multi gpu (out of date)
+
+To do distributed on multiple GPUs or machines using Horovod:
+
+```
+mpirun -np 4 \
+    -H localhost:4 \
+    -bind-to none -map-by slot \
+    -x NCCL_DEBUG=INFO -x LD_LIBRARY_PATH -x PATH \
+    -x PYTHONPATH=src \
+    -mca pml ob1 -mca btl ^openib \
+    /home/jovyan/gpt-2/train-horovod.py --dataset encoded.npz
+```
+
+## GPT-2 samples
+
+| WARNING: Samples are unfiltered and may contain offensive content. |
+| --- |
+
+While we have not yet released GPT-2 itself, you can see some samples from it in the `gpt-2-samples` folder.
+We show unconditional samples with default settings (temperature 1 and no truncation), with temperature 0.7, and with truncation with top_k 40.
+We show conditional samples, with contexts drawn from `WebText`'s test set, with default settings (temperature 1 and no truncation), with temperature 0.7, and with truncation with top_k 40.
 
 ## Citation
 
