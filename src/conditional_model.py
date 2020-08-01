@@ -47,7 +47,7 @@ def conditional_model(
     if sentences == None:
         raise ValueError('Sentences cannot be None')
 
-    enc = encoder.get_encoder(model_name)
+    enc = encoder.get_encoder(model_name, models_dir)
     hparams = model.default_hparams()
     with open(os.path.join('models', model_name, 'hparams.json')) as f:
         hparams.override_from_dict(json.load(f))
