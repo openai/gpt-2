@@ -1,6 +1,6 @@
 import numpy as np
 import tensorflow as tf
-import tf.compat.v1 as tfcV1
+import tensorflow.compat.v1 as tfcV1
 from tensorflow.contrib.training import HParams
 
 def default_hparams():
