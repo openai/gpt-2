@@ -1,3 +1,7 @@
+# GPT-2 experiments
+In this repo we are running experiment with GPT-2 language modle to compare it with other language model such as BERT, GPT-3, T5 etc.
+
+
 **Status:** Archive (code is provided as-is, no updates expected)
 
 # gpt-2
