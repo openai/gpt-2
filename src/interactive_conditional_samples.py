@@ -75,6 +75,7 @@ def interact_model(
                 print('Prompt should not be empty!')
                 raw_text = input("Model prompt >>> ")
             context_tokens = enc.encode(raw_text)
+            print(context_tokens)
             generated = 0
             for _ in range(nsamples // batch_size):
                 out = sess.run(output, feed_dict={
