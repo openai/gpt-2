@@ -94,6 +94,8 @@ class Encoder:
         return word
 
     def encode(self, text):
+        print(self)
+        print(text)
         bpe_tokens = []
         for token in re.findall(self.pat, text):
             token = ''.join(self.byte_encoder[b] for b in token.encode('utf-8'))
@@ -101,6 +103,8 @@ class Encoder:
         return bpe_tokens
 
     def decode(self, tokens):
+        print(self)
+        print(tokens)
         text = ''.join([self.decoder[token] for token in tokens])
         text = bytearray([self.byte_decoder[c] for c in text]).decode('utf-8', errors=self.errors)
         return text
