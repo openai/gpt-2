@@ -28,4 +28,8 @@ Docker and Docker Compose must be installed.
    ```bash
    ./scripts/make-training-data.sh
    ```
-
+5. Train the model:
+   ```bash
+   docker-compose run --rm model python3 src/train.py --dataset ./training-data/discord-messages.npz
+   ```
+   Every 1,000 steps a snapshot of the training will be saved, after this happens you can safely CTRL+C and training results will be saved.
