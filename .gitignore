@@ -1,3 +1,8 @@
 __pycache__
 .mypy_cache/
 models/
+
+training-data/
+discord-messages/
+.env
+checkpoint/
