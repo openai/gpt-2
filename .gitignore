@@ -6,3 +6,6 @@ training-data/
 discord-messages/
 .env
 checkpoint/
+
+samples/
+*.tar.gz
