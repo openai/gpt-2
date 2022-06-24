@@ -1,12 +1,12 @@
-# Brap Instructions
-Specific instructions on how to train the model for Brap use.
+# Brap Brain
+Run GTP-2 trained on Discord messages.
 
 # Table Of Contents
 - [Overview](#overview)
 - [Instructions](#instructions)
 
 # Overview
-The goal of this project is to try and train GPT-2 on our Discord server's message history.
+The goal of this project is to try and train GPT-2 on your Discord server's message history. It includes OpenAI's GPT-2 model code and nshepperd's training code. As well as the glue code to generate training datasets from Discord messages and run evaluations on the model.
 
 Shoutout to nshepperd and Ng Wai Foong. [Ng Wai Foong's blog post](https://medium.com/ai-innovation/beginners-guide-to-retrain-gpt-2-117m-to-generate-custom-text-content-8bb5363d8b7f) and [nshepperd's GitHub GTP-2 fork](https://github.com/nshepperd/gpt-2) provided some very helpful code and instructions. The `encode.py`, `load_datasets.py`, and `train.py` files in the `src/` directory are from nshepperd's fork.
 
