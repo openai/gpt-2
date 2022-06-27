@@ -67,6 +67,7 @@ parser.add_argument('--val_dataset', metavar='PATH', type=str, default=None, hel
 parser.add_argument('--val_batch_size', metavar='SIZE', type=int, default=2, help='Batch size for validation.')
 parser.add_argument('--val_batch_count', metavar='N', type=int, default=40, help='Number of batches for validation.')
 parser.add_argument('--val_every', metavar='STEPS', type=int, default=0, help='Calculate validation loss every STEPS steps.')
+parser.add_argument('--tpu_addr', metavar='TPU_ADDR', type=str, help='Address of TPU used to train')
 
 
 def maketree(path):
@@ -96,6 +97,28 @@ def main():
         raise ValueError(
             "Can't get samples longer than window size: %s" % hparams.n_ctx)
 
+    # Connect to TPU if training with one
+    if args.tpu_addr:
+        tpu_resolver = tf.distribute.cluster_resolver.TPUClusterResolver(tpu=args.tpu_addr)
+        tf.config.experimental_connect_to_cluster(tpu_resolver)
+        tf.tpu.experimental.initialize_tpu_system(tpu_resolver)
+        print("TPU devices: ", tf.config.list_logical_devices('TPU'))
+
+        train(
+            args=args,
+            enc=enc,
+            hparams=hparams,
+        )
+    else:
+        # Not using TPU
+        train(
+            args=args,
+            enc=enc,
+            hparams=hparams,
+        )
+
+
+def train(args, enc, hparams):
     with tf.Session() as sess:
         # Fully static shape required to make memory accounting in
         # twremat accurate.
