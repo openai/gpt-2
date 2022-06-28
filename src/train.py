@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 # FROM: https://github.com/nshepperd/gpt-2/blob/finetuning/train.py
 # Usage:
 #  train.py --dataset <file|directory|glob>
@@ -9,6 +8,7 @@ import os, sys
 import numpy as np
 import tensorflow.compat.v1 as tf
 import tensorflow as tf2
+from tensorflow.python.client import device_lib
 import time
 import tqdm
 
@@ -37,7 +37,7 @@ parser = argparse.ArgumentParser(
     description='Fine-tune GPT-2 on your custom dataset.',
     formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
-parser.add_argument('--dataset', metavar='PATH', type=str, required=True, help='Input file, directory, or glob pattern (utf-8 text, or preencoded .npz files).')
+parser.add_argument('--dataset', metavar='PATH', type=str, help='Input file, directory, or glob pattern (utf-8 text, or preencoded .npz files).')
 parser.add_argument('--model_name', metavar='MODEL', type=str, default='124M', help='Pretrained model name')
 parser.add_argument('--models_dir', metavar='PATH', type=str, default='models', help='Path to models directory')
 parser.add_argument('--combine', metavar='CHARS', type=int, default=50000, help='Concatenate input files with <|endoftext|> separator into chunks of this minimum size')
@@ -68,7 +68,8 @@ parser.add_argument('--val_batch_size', metavar='SIZE', type=int, default=2, hel
 parser.add_argument('--val_batch_count', metavar='N', type=int, default=40, help='Number of batches for validation.')
 parser.add_argument('--val_every', metavar='STEPS', type=int, default=0, help='Calculate validation loss every STEPS steps.')
 parser.add_argument('--tpu_addr', metavar='TPU_ADDR', type=str, help='Address of TPU used to train')
-
+parser.add_argument('--tf_dev', metavar='DEV', type=str, help='Name of device to run Tensorflow jobs on')
+parser.add_argument('--list_tf_devs', help="Don't train, list Tensorflow devices of this type (ex., GPU or CPU)", action='store_true')
 
 def maketree(path):
     try:
@@ -98,7 +99,22 @@ def main():
             "Can't get samples longer than window size: %s" % hparams.n_ctx)
 
     # Connect to TPU if training with one
+    if args.tpu_addr and args.tf_dev:
+        raise ValueError("--tpu_addr and --tf_dev cannot provided at the same time")
+
+    # List available Tensorflow execution devices if requested
+    if args.list_tf_devs:
+        print("Tensorflow devices:")
+        devs = device_lib.list_local_devices()
+        for dev in devs:
+            print(f"- {dev.name}")
+        sys.exit(0)
+    elif not args.dataset: # Otherwise ensure --dataset opt is provided
+        raise ValueError("--dataset option is required")
+    
+    # Run training on the correct device
     if args.tpu_addr:
+        # Run on a TPU
         tpu_resolver = tf.distribute.cluster_resolver.TPUClusterResolver(tpu=args.tpu_addr)
         tf.config.experimental_connect_to_cluster(tpu_resolver)
         tf.tpu.experimental.initialize_tpu_system(tpu_resolver)
@@ -109,8 +125,18 @@ def main():
             enc=enc,
             hparams=hparams,
         )
+    elif args.tf_dev:
+        # Run on a device by name
+        print(f"Using Tensorflow device '{args.tf_dev}'")
+
+        with tf.device(args.tf_dev):
+            train(
+                args=args,
+                enc=enc,
+                hparams=hparams,
+            )
     else:
-        # Not using TPU
+        # Run on whatever device Tensorflow decides by default
         train(
             args=args,
             enc=enc,
@@ -119,7 +145,9 @@ def main():
 
 
 def train(args, enc, hparams):
-    with tf.Session() as sess:
+    """ Performs the training logic.
+    """
+    with tf.Session(config=tf.ConfigProto(allow_soft_placement=True, log_device_placement=True)) as sess:
         # Fully static shape required to make memory accounting in
         # twremat accurate.
         train_context = tf.placeholder(tf.int32, [args.batch_size, 1024])
@@ -173,16 +201,6 @@ def train(args, enc, hparams):
         opt_grads = list(zip(opt_grads, train_vars))
         opt_apply = opt.apply_gradients(opt_grads)
         summary_loss = tf.summary.scalar('loss', train_loss)
-
-        # if args.twremat:
-        #     import tfremat
-        #     # Applying tfremat to opt_apply has more accurate
-        #     # accounting but is a bit iffier since side effecting ops
-        #     # have more restrictions for correctness. If in doubt
-        #     # revert back to version using opt_grads above.
-        #     (opt_apply, train_loss, summary_loss) = (
-        #         tfremat.tf_remat((opt_apply, train_loss, summary_loss), memlimit=args.twremat_memlimit))
-
 
         summary_lr = tf.summary.scalar('learning_rate', args.learning_rate)
         summaries = tf.summary.merge([summary_lr, summary_loss])

@@ -36,6 +36,8 @@ Docker and Docker Compose must be installed.
    The `--run_name <checkpoint run name>` option can be provided to customize the sub-directory in `checkpoints/` in which results will be saved.  
    The `--sample_every <num>` option can be provided to change how often samples are taken from the model.  
    The `--save_every <num>` option can be provided to change how often checkpoints are saved.
+   The `--tf_dev <device>` option can be used to train the model on a specific device (such as a GPU). To see avaliable devices provide the `--list_tf_devs` option. See [GPU Support](#gpu-support) for instructions on how to install the required libraries.  
+   The `--tpu_addr <node name>` option can be used to enable experimental TPU support.
 6. Use the trained data:
    - The `checkpoints/<run name>/` directory will have a bunch of files which need to be moved into the `models/` directory in order for the GPT-2 code to use the training results. Run the following to copy the data:
      ```bash
@@ -46,3 +48,39 @@ Docker and Docker Compose must be installed.
      - `<checkpoint run name>` is the name of the sub-directory inside `checkpoints/` from which files will be copied, by default this is `run1` and can be customized during the training step via the `--run_name` option
      - `<iteration count` is the training iteration number from which model weights will be used, if you look in `checkpoints/<checkpoint run name>/` you will see a bunch of files post-fixed with numbers, each of these numbers if the `<iteration count>`, ideally you should pick the highest number you see in this directory
    - Then in `src/interactive_conditional_samples.py` or `src/generate_unconditional_samples.py` change the `model_name` argument of the main function to `<model name>`
+
+## GPU Support
+Running training on a GPU can greatly increase the speed compared to running on a CPU. However, a few things must be setup first, and it can be a little tricky.
+
+The main rule of thumb is to pay attention to error messages at the beginning of the program's output, and try to resolve those. Once all error messages are gone you will be left with an environment where GPU training will be possible. Instructions assume you are using Nvidia graphics cards which support CUDA.
+
+To setup GPU training:
+
+1. Install [Nvida CUDA v10](https://developer.nvidia.com/cuda-10.0-download-archive).  
+   Installing version 10 (not the latest) is important. As the GPT-2 code uses Tensorflow 1.15.5, and as you can see from this [Tensorflow compatibility table](https://www.tensorflow.org/install/source#gpu) CUDA v10 is the only compatible version.  
+   You will be required to create an Nvidia developer account before you can download CUDA.
+2. Install [cuDNN v7.4](https://developer.nvidia.com/rdp/cudnn-archive#a-collapse742-10).  
+   Again the specific version is important here. The compatibility table from the previous step indicates cuDNN v7.4 is the only compatible version.  
+   On Windows the installation process is a little confusing. Once you download cuDNN extract the ZIP file and open the `cuda` folder. Inside this folder there should be a `lib`, `include`, and `bin` folder. Find the location where CUDA is installed (Likely `C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v10.0`). Then copy the `lib`, `include`, and `bin` folders from cuDNN into the CUDA directory. If prompted select to overwrite any files.
+3. Install [Conda](https://docs.conda.io/en/latest/).  
+   Although it is not my favorite Python virtual environment or package manager it is able to install some required components.
+4. Install Python libraries for CUDA and cuDNN by running:
+   ```
+   conda install -c conda-forge cudatoolkit=11.2 cudnn=8.1.0
+   ```
+5. To simplify the situation it is recommended you perform GPU training outside of Docker. Since this is the case you should create a virtual environment by running:
+   ```
+   conda create -n brap-brain python=3.7
+   conda activate brap-brain
+   ```
+   Run future commands in this same terminal session. If you make a new session be sure to run `conda activate brap-brain` before completing the following steps.
+6. Install Python dependencies into the Conda virtual environment by running:
+   ```
+   pip3 install -r ./requirements.txt
+   ```
+7. At this point the environment should be ready to train using a GPU. To verify this ask the training script to list the devices available to it:
+   ```
+   python3 ./src/train.py --list_tf_devs
+   ```
+   If you see something like `/device:GPU:0` in the list then your GPU is ready to be used. If you do not see your GPU in the list then check the log output to see if there are any errors which you can work through.  
+   To train with your GPU simply provide the `--tf_dev <device>` option to the script (ex., `--tf_dev GPU:0`). This option lets you be lienient with the name of the device, and you do not have to type the `/device:` part as seen in the `--list_tf_devs` output.
