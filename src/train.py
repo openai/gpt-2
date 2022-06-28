@@ -102,7 +102,7 @@ def main():
         tpu_resolver = tf.distribute.cluster_resolver.TPUClusterResolver(tpu=args.tpu_addr)
         tf.config.experimental_connect_to_cluster(tpu_resolver)
         tf.tpu.experimental.initialize_tpu_system(tpu_resolver)
-        print("TPU devices: ", tf.config.list_logical_devices('TPU'))
+        print(f"Using TPU '{args.tpu_addr}'")
 
         train(
             args=args,
