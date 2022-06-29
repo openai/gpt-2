@@ -2,13 +2,12 @@ import json
 import os
 import glob
 import argparse
-import logging
 
-logger = logging.getLogger(__name__)
+import lib_logging
+
+logger = lib_logging.make_logger('combine-training-data')
 
 PROG_DIR = os.path.dirname(os.path.realpath(__file__))
-
-TRAINING_DELIMITER = "<|endoftext|>"
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Combine Discord messages into a training data set file.")
