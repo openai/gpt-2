@@ -2,6 +2,7 @@ import argparse
 import os
 
 import lib_logging
+from encode_training_data import TokenizerConfigLocation
 
 logger = lib_logging.make_logger('train')
 
@@ -17,14 +18,22 @@ def parse_args():
         '--gpu',
         help="Train the model on a GPU",
         action='store_true',
+        default=False,
     )
 
     parser.add_argument(
-        '--tokenizer-in',
-        help="Path to tokenizer configuration file",
+        '--tokenizer-dir',
+        help="Path to tokenizer configuration directory",
         type=str,
-        default=os.path.realpath(os.path.join(PROG_DIR, "../training-data/tokenizer.json")),
+        default=os.path.realpath(os.path.join(PROG_DIR, "../training-data")),
     )
+    parser.add_argument(
+        '--tokenizer-name',
+        help="Name of tokenizer, configuration files for the tokenizer are prefixed with this name",
+        type=str,
+        default="tokenizer",
+    )
+
     parser.add_argument(
         '--vocab-size',
         help="Number of words in the tokenizer vocabulary",
@@ -46,8 +55,10 @@ def main():
     args = parse_args()
 
     # Build dataset
+    tokenizer_config_location = TokenizerConfigLocation(args.tokenizer_dir, args.tokenizer_name)
+
     (data, config) = load_dataset(
-        tokenizer_in=args.tokenizer_in,
+        tokenizer_config_location=tokenizer_config_location,
         vocab_size=args.vocab_size,
         dataset=args.dataset,
     )
@@ -55,17 +66,19 @@ def main():
     train(
         data=data,
         config=config,
-        tokenizer_in=args.tokenizer_in,
+        tokenizer_config_location=tokenizer_config_location,
         gpu=args.gpu,
     )
 
 def load_dataset(
-    tokenizer_in: str,
+    tokenizer_config_location: TokenizerConfigLocation,
     vocab_size: int,
     dataset: str,
 ):
     data = TokenDataset(
         file_path=dataset,
+        vocab_file=tokenizer_config_location.vocab_file,
+        merges_file=tokenizer_config_location.merges_file,
     )
     config = build_gpt2_config(vocab_size=vocab_size)
 
@@ -74,17 +87,15 @@ def load_dataset(
 def train(
     data,
     config,
-    tokenizer_in: str,
+        tokenizer_config_location: TokenizerConfigLocation,
     gpu: bool,
 ):
     model = aitextgen(
-        tokenizer_file=tokenizer_in,
+        tokenizer_file=tokenizer_config_location.tokenizer_file,
         config=config,
+        to_gpu=gpu,
     )
 
-    if gpu:
-        model.to_gpu()
-    
     model.train(data)
 
 if __name__ == '__main__':
