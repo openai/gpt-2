@@ -1,5 +1,6 @@
 import argparse
 import os
+import sys
 
 import lib_logging
 from build_tokenizer import TokenizerConfig
@@ -91,7 +92,11 @@ def train(
         to_gpu=gpu,
     )
 
-    model.train(data)
+    try:
+        model.train(data, batch_size=1, num_workers=1)
+    except Exception as e:
+        logger.error("Failed to train model", e)
+        sys.exit(1)
 
 if __name__ == '__main__':
     main()
