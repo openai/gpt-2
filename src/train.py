@@ -93,7 +93,7 @@ def train(
     )
 
     try:
-        model.train(data, batch_size=1, num_workers=1)
+        model.train(data, num_workers=1)
     except Exception as e:
         logger.error("Failed to train model", e)
         sys.exit(1)
