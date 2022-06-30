@@ -2,7 +2,7 @@ import argparse
 import os
 
 import lib_logging
-from encode_training_data import TokenizerConfigLocation
+from build_tokenizer import TokenizerConfig
 
 logger = lib_logging.make_logger('train')
 
@@ -22,25 +22,12 @@ def parse_args():
     )
 
     parser.add_argument(
-        '--tokenizer-dir',
-        help="Path to tokenizer configuration directory",
+        '--tokenizer-index',
+        help="Path to tokenizer input file which specifies which tokenizer to use",
         type=str,
-        default=os.path.realpath(os.path.join(PROG_DIR, "../training-data")),
+        default=os.path.realpath(os.path.join(PROG_DIR, "../training-data/tokenizer-index.json")),
     )
-    parser.add_argument(
-        '--tokenizer-name',
-        help="Name of tokenizer, configuration files for the tokenizer are prefixed with this name",
-        type=str,
-        default="tokenizer",
-    )
-
-    parser.add_argument(
-        '--vocab-size',
-        help="Number of words in the tokenizer vocabulary",
-        type=int,
-        default=50_000,
-    )
-
+   
     parser.add_argument(
         '--dataset',
         help="Path to training dataset file",
@@ -53,45 +40,53 @@ def parse_args():
 def main():
     # Parse arguments
     args = parse_args()
+    
+    tokenizer_config = TokenizerConfig.load(args.tokenizer_index)
 
     # Build dataset
-    tokenizer_config_location = TokenizerConfigLocation(args.tokenizer_dir, args.tokenizer_name)
-
     (data, config) = load_dataset(
-        tokenizer_config_location=tokenizer_config_location,
-        vocab_size=args.vocab_size,
+        tokenizer_config=tokenizer_config,
         dataset=args.dataset,
     )
+
     # Train
     train(
         data=data,
         config=config,
-        tokenizer_config_location=tokenizer_config_location,
+        tokenizer_config=tokenizer_config,
         gpu=args.gpu,
     )
 
 def load_dataset(
-    tokenizer_config_location: TokenizerConfigLocation,
-    vocab_size: int,
+    tokenizer_config: TokenizerConfig,
     dataset: str,
 ):
+    # Check if encoded cache exists
+    encoded_dataset_path = os.path.splitext(dataset)[0] + '.tar.gz'
+    dataset_kwargs = {}
+
+    if os.path.exists(encoded_dataset_path):
+        dataset_kwargs['from_cache'] = encoded_dataset_path
+    
+    # Load dataset
     data = TokenDataset(
         file_path=dataset,
-        vocab_file=tokenizer_config_location.vocab_file,
-        merges_file=tokenizer_config_location.merges_file,
+        vocab_file=tokenizer_config.vocab_file,
+        merges_file=tokenizer_config.merges_file,
+        #**dataset_kwargs,
     )
-    config = build_gpt2_config(vocab_size=vocab_size)
+    config = build_gpt2_config(vocab_size=tokenizer_config.vocab_size)
 
     return (data, config)
 
 def train(
     data,
     config,
-        tokenizer_config_location: TokenizerConfigLocation,
+    tokenizer_config: TokenizerConfig,
     gpu: bool,
 ):
     model = aitextgen(
-        tokenizer_file=tokenizer_config_location.tokenizer_file,
+        tokenizer_file=tokenizer_config.tokenizer_model_overview_file,
         config=config,
         to_gpu=gpu,
     )
