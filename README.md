@@ -160,3 +160,7 @@ The `conda-environment.yml` file contains a snapshot of Python and Anaconda depe
    ```bash
    conda env export -f conda-environment.yml
    ```
+
+
+
+It turns out the `aitextgen` library is a wrapper around the GPT-2 code. It can also run different and smaller models. However, it is capable of running the fully sized GPT-2 model. I rewrote the entire brap-brain code-base using the AI Text Gen library. As it is a much cleaner, and better, wrapper around the GPT-2 code

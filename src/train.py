@@ -127,6 +127,13 @@ def parse_args():
         default=100,
     )
 
+    parser.add_argument(
+        '--checkpoint-every-epochs',
+        help="Save a checkpoint of the trained result every number of epochs",
+        type=int,
+        default=5,
+    )
+
     return parser.parse_args()
 
 def main():
@@ -153,6 +160,7 @@ def main():
         sample_every=args.sample_every,
         target_epochs=args.target_epochs,
         train_epoch_steps=args.train_epoch_steps,
+        checkpoint_every_epochs=args.checkpoint_every_epochs,
     )
 
 def load_dataset(
@@ -188,6 +196,7 @@ def train(
     sample_every: int,
     target_epochs: int,
     train_epoch_steps: int,
+    checkpoint_every_epochs: int,
 ):
     # Create model
     model = aitextgen(
@@ -224,6 +233,7 @@ def train(
 
         # Do training
         try:
+            num_epochs_since_checkpoint = 0
             while not should_graceful_exit.is_set() and (num_epochs < target_epochs or target_epochs < 0):
                 model.train(
                     output_dir=output_dir,
@@ -235,12 +245,20 @@ def train(
                 )
 
                 num_epochs += 1
+                num_epochs_since_checkpoint += 1
                 training_meta.training_iterations += train_epoch_steps
 
                 logger.info(f"Completed training epoch {num_epochs} resulting in {train_epoch_steps} steps of training, total steps {training_meta.training_iterations}")
                 
                 training_meta.save(training_meta_path)
-                logger.info(f"Model saved into '{output_dir}' directory")
+
+                if num_epochs_since_checkpoint >= checkpoint_every_epochs:
+                    checkpoint_dir = os.path.join(output_dir, f"checkpoint-{training_meta.training_iterations}")
+                    model.save(checkpoint_dir)
+                    training_meta.save(os.path.join(checkpoint_dir, "training-metadata.json"))
+                    logger.info(f"Model checkpoint saved into '{checkpoint_dir}' directory")
+
+                    num_epochs_since_checkpoint = 0
         except Exception as e:
             logger.error("Failed to train model", e)
         finally:
