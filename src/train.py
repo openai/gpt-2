@@ -2,16 +2,18 @@ import argparse
 import os
 import sys
 
+
+from aitextgen import aitextgen
+from aitextgen.TokenDataset import TokenDataset
+from aitextgen.utils import build_gpt2_config
+from transformers import GPT2Config 
+
 import lib_logging
 from build_tokenizer import TokenizerConfig
 
 logger = lib_logging.make_logger('train')
 
 PROG_DIR = os.path.dirname(os.path.realpath(__file__))
-
-from aitextgen import aitextgen
-from aitextgen.TokenDataset import TokenDataset
-from aitextgen.utils import build_gpt2_config
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Train the model")
@@ -36,6 +38,40 @@ def parse_args():
         default=os.path.realpath(os.path.join(PROG_DIR, "../training-data/discord-messages.txt")),
     )
 
+    parser.add_argument(
+        '--models-dir',
+        help="Parent directory where models will be saved",
+        type=str,
+        default="models",
+    )
+    parser.add_argument(
+        '--model-name',
+        help="Name of model, used to determine where it will be saved",
+        type=str,
+        default="model",
+    )
+
+    parser.add_argument(
+        '--sample-every',
+        help="The number of training steps which should occur between model output samples",
+        type=int,
+        default=1000,
+    )
+
+    parser.add_argument(
+        '--target-epochs',
+        help="Number of training epochs to run, -1 to continuously train with no limit",
+        type=int,
+        default=-1
+    )
+
+    parser.add_argument(
+        '--train-epoch-steps',
+        help="Number of steps of training to perform for each overall cycle of training",
+        type=int,
+        default=5000,
+    )
+
     return parser.parse_args()
 
 def main():
@@ -53,15 +89,20 @@ def main():
     # Train
     train(
         data=data,
+        output_parent_dir=args.models_dir,
+        model_name=args.model_name,
         config=config,
         tokenizer_config=tokenizer_config,
         gpu=args.gpu,
+        sample_every=args.sample_every,
+        target_epochs=args.target_epochs,
+        train_epoch_steps=args.train_epoch_steps,
     )
 
 def load_dataset(
     tokenizer_config: TokenizerConfig,
     dataset: str,
-):
+) -> (TokenDataset, GPT2Config):
     # Check if encoded cache exists
     encoded_dataset_path = os.path.splitext(dataset)[0] + '.tar.gz'
     dataset_kwargs = {}
@@ -81,10 +122,15 @@ def load_dataset(
     return (data, config)
 
 def train(
-    data,
-    config,
+    data: TokenDataset,
+    output_parent_dir: str,
+    model_name: str,
+    config: GPT2Config,
     tokenizer_config: TokenizerConfig,
     gpu: bool,
+    sample_every: int,
+    target_epochs: int,
+    train_epoch_steps: int,
 ):
     model = aitextgen(
         tokenizer_file=tokenizer_config.tokenizer_model_overview_file,
@@ -92,11 +138,33 @@ def train(
         to_gpu=gpu,
     )
 
+    output_dir = os.path.join(output_parent_dir, model_name)
+    logger.info(f"Saving model into '{output_dir}' directory")
+
+    
+    num_epochs = 0
+    total_steps = 0
+
     try:
-        model.train(data, num_workers=1)
+        while num_epochs < target_epochs or target_epochs < 0:
+            model.train(
+                output_dir=output_dir,
+                train_data=data,
+                num_workers=1, # Required or else training on GPUs won't work
+                generate_every=sample_every,
+                num_steps=train_epoch_steps,
+            )
+
+            num_epochs += 1
+            total_steps += train_epoch_steps
+
+            logger.info(f"Completed training epoch {num_epochs}, total steps {total_steps}")
     except Exception as e:
         logger.error("Failed to train model", e)
         sys.exit(1)
+
+    logger.info(f"Completed {num_epochs} of training, resulting in {total_steps} training iterations")
+    logger.info(f"Model saved into '{output_dir}' directory")
 
 if __name__ == '__main__':
     main()
