@@ -238,6 +238,9 @@ def train(
                 training_meta.training_iterations += train_epoch_steps
 
                 logger.info(f"Completed training epoch {num_epochs} resulting in {train_epoch_steps} steps of training, total steps {training_meta.training_iterations}")
+                
+                training_meta.save(training_meta_path)
+                logger.info(f"Model saved into '{output_dir}' directory")
         except Exception as e:
             logger.error("Failed to train model", e)
         finally:
