@@ -124,7 +124,7 @@ def parse_args():
         '--train-epoch-steps',
         help="Number of steps of training to perform for each overall cycle of training",
         type=int,
-        default=500,
+        default=100,
     )
 
     return parser.parse_args()
@@ -195,12 +195,13 @@ def train(
         config=config,
         to_gpu=gpu,
     )
-    
-    should_train = True
 
-    def do_training():
+    def do_training(should_graceful_exit: threading.Event):
         """ Logic which runs training.
+        Arguments:
+        - should_graceful_exit: If set the model should stop training
         """
+
         # Model storage
         output_dir = os.path.join(output_parent_dir, model_name)
         logger.info(f"Saving model into '{output_dir}' directory")
@@ -223,7 +224,7 @@ def train(
 
         # Do training
         try:
-            while should_train and (num_epochs < target_epochs or target_epochs < 0):
+            while not should_graceful_exit.is_set() and (num_epochs < target_epochs or target_epochs < 0):
                 model.train(
                     output_dir=output_dir,
                     train_data=data,
@@ -240,7 +241,7 @@ def train(
         except Exception as e:
             logger.error("Failed to train model", e)
         finally:
-            if not should_train:
+            if should_graceful_exit.is_set():
                 logger.info("Training gracefully shut down")
             
             training_meta.save(training_meta_path)
@@ -249,23 +250,32 @@ def train(
             logger.info(f"Model saved into '{output_dir}' directory")
 
     # Run training with graceful shutdown
-    training_thread = threading.Thread(target=do_training)
-    def do_management():
+    should_graceful_exit = threading.Event()
+    training_thread = threading.Thread(target=do_training, kwargs={'should_graceful_exit': should_graceful_exit})
+
+    def do_management(should_graceful_exit: threading.Event):
+        """ Allow user to gracefully exit the training process.
+        Arguments:
+        - should_graceful_exit: Used to signal the training thread that it should stop
+        """
+
         logger.info("Type 'quit' to stop training")
         training_thread.start()
 
-        while should_train:
+        while True:
             user_input = input().strip()
 
             if user_input == 'quit':
-                should_train = False
+                logger.info("Attempting a graceful shutdown")
+                should_graceful_exit.set()
+                return
             else:
-                logger.info(f"Unrecognized user input command '{user_input}'")
+                logger.info(f"Unrecognized user input command '{user_input}' (commands: quit)")
 
         logger.info("Waiting for training to gracefully shut down")
         training_thread.join()
 
-    management_thread = threading.Thread(target=do_management)
+    management_thread = threading.Thread(target=do_management, kwargs={'should_graceful_exit': should_graceful_exit})
     management_thread.start()
     
     training_thread.join()
