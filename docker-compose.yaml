@@ -1,7 +1,0 @@
-services:
-  model:
-    build:
-      context: ./
-      dockerfile: ./Dockerfile.brap
-    volumes:
-      - ./:/gpt-2
