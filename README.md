@@ -18,6 +18,7 @@ Complete sections in this order:
 
 1. [Dependency Installation](#dependency-installation)
 2. [Train The Model](#train-the-model)
+3. [Use The Model](#use-the-model)
 
 ## Dependency Installation
 If you intend to use a GPU to train the model see [GPU Setup](#gpu-setup).  
@@ -102,6 +103,15 @@ Once the Discord messages have been prepared they can be fed into the model for 
    ```bash
    python ./src/train.py --gpu
    ```
+
+## Use The Model
+Once the model has been trained prompts can be supplied and it will try to response appropriately.
+
+1. Run the evaluate script:
+   ```bash
+   python ./src/evaluate.py --interactive-prompt
+   ```
+   Type in a prompt for the model and hit enter, you should see the model's responses printed in the terminal.
 
 # Development
 ## Creating The Anaconda Environment
