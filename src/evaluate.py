@@ -33,13 +33,11 @@ def parse_args():
         '--prompt',
         help="Text which will be provided to the model (cannot be provided with --interactive-prompt)",
         type=str,
-        required=False,
     )
     prompt_parser.add_argument(
         '--interactive-prompt',
         help="Indicates the script should ask the user for prompts via stdin",
         action='store_true',
-        required=False,
     )
 
     parser.add_argument(
@@ -60,7 +58,7 @@ def main():
     model, training_meta = load_model(model_dir)
 
     # Evaluate model
-    if prompt is not None:
+    if args.prompt is not None:
         res = evaluate_prompt(
             model=model,
             prompt=args.prompt,
@@ -73,7 +71,7 @@ def main():
 
             res = evaluate_prompt(
                 model=model,
-                prompt=args.prompt,
+                prompt=prompt,
                 max_results=args.max_results
             )
             print_results(res)
