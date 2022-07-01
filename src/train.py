@@ -1,7 +1,8 @@
 import argparse
 import os
 import sys
-
+import json
+import threading
 
 from aitextgen import aitextgen
 from aitextgen.TokenDataset import TokenDataset
@@ -14,6 +15,50 @@ from build_tokenizer import TokenizerConfig
 logger = lib_logging.make_logger('train')
 
 PROG_DIR = os.path.dirname(os.path.realpath(__file__))
+
+
+class TrainingMetadata:
+    """ Holds metadata about the training progress of a model.
+    Fields:
+    - training_iterations: Number of training steps taken by the model.
+    """
+    training_iterations: int
+
+    def __init__(self, training_iterations: int=0):
+        """ Initialize the TrainingMetadata.
+        Arguments:
+        - training_iterations: See TrainingMetadata.training_iterations
+        """
+        self.training_iterations = training_iterations
+
+    def save(self, out_file: str):
+        """ Save the training metadata to a JSON file.
+        Arguments:
+        - out_file: Path to which JSON file will be saved
+        """
+        with open(out_file, 'w') as out_f:
+            json.dump({
+                'training_iterations': self.training_iterations,
+            }, out_f)
+
+    @staticmethod
+    def load(in_file: str) -> 'TrainingMetadata':
+        """ Load training metadata from a JSON file.
+        Arguments:
+        - in_file: Path to JSON file which will be loaded
+
+        Returns: TrainingMetadata loaded from file
+
+        Raises:
+        - KeyError: If JSON file doesn't contain value required
+        """
+        with open(in_file, 'r') as in_f:
+            data = json.load(in_f)
+
+            return TrainingMetadata(
+                training_iterations=data['training_iterations'],
+            )
+
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Train the model")
@@ -55,7 +100,7 @@ def parse_args():
         '--sample-every',
         help="The number of training steps which should occur between model output samples",
         type=int,
-        default=1000,
+        default=100,
     )
 
     parser.add_argument(
@@ -69,7 +114,7 @@ def parse_args():
         '--train-epoch-steps',
         help="Number of steps of training to perform for each overall cycle of training",
         type=int,
-        default=5000,
+        default=500,
     )
 
     return parser.parse_args()
@@ -132,39 +177,76 @@ def train(
     target_epochs: int,
     train_epoch_steps: int,
 ):
+    # Create model
     model = aitextgen(
         tokenizer_file=tokenizer_config.tokenizer_model_overview_file,
         config=config,
         to_gpu=gpu,
     )
-
-    output_dir = os.path.join(output_parent_dir, model_name)
-    logger.info(f"Saving model into '{output_dir}' directory")
-
     
-    num_epochs = 0
-    total_steps = 0
+    should_train = True
 
-    try:
-        while num_epochs < target_epochs or target_epochs < 0:
-            model.train(
-                output_dir=output_dir,
-                train_data=data,
-                num_workers=1, # Required or else training on GPUs won't work
-                generate_every=sample_every,
-                num_steps=train_epoch_steps,
-            )
+    def do_training():
+        """ Logic which runs training.
+        """
+        # Model storage
+        output_dir = os.path.join(output_parent_dir, model_name)
+        logger.info(f"Saving model into '{output_dir}' directory")
 
-            num_epochs += 1
-            total_steps += train_epoch_steps
+        # Training metadata
+        training_meta_path = os.path.join(output_dir, "training-metadata.json")
+        training_meta = TrainingMetadata()
 
-            logger.info(f"Completed training epoch {num_epochs}, total steps {total_steps}")
-    except Exception as e:
-        logger.error("Failed to train model", e)
-        sys.exit(1)
+        if os.path.exists(training_meta_path):
+            training_meta = TrainingMetadata.load(training_meta_path)
+        
+        num_epochs = 0
 
-    logger.info(f"Completed {num_epochs} of training, resulting in {total_steps} training iterations")
-    logger.info(f"Model saved into '{output_dir}' directory")
+        # Do training
+        try:
+            while should_train and (num_epochs < target_epochs or target_epochs < 0):
+                model.train(
+                    output_dir=output_dir,
+                    train_data=data,
+                    num_workers=1, # Required or else training on GPUs won't work
+                    generate_every=sample_every,
+                    num_steps=train_epoch_steps,
+                    progress_bar_refresh_rate=1
+                )
+
+                num_epochs += 1
+                training_meta.training_iterations += train_epoch_steps
+
+                logger.info(f"Completed training epoch {num_epochs} resulting in {train_epoch_steps} steps of training, total steps {training_meta.training_iterations}")
+        except Exception as e:
+            logger.error("Failed to train model", e)
+        finally:
+            if not should_train:
+                logger.info("Training gracefully shut down")
+            
+            training_meta.save(training_meta_path)
+                    
+            logger.info(f"Completed {num_epochs} epochs of training resulting in {train_epoch_steps * num_epochs}, total steps {training_meta.training_iterations}")
+            logger.info(f"Model saved into '{output_dir}' directory")
+
+    # Run training with graceful shutdown
+    training_thread = threading.Thread(target=do_training)
+
+    logger.info("Type 'quit' to stop training")
+    training_thread.start()
+
+    while should_train:
+        user_input = input().strip()
+
+        if user_input == 'quit':
+            should_train = False
+        else:
+            logger.info(f"Unrecognized user input command '{user_input}'")
+
+    logger.info("Waiting for training to gracefully shut down")
+    training_thread.join()
+
+    logger.info("Done")
 
 if __name__ == '__main__':
     main()
