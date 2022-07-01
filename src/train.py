@@ -21,15 +21,23 @@ class TrainingMetadata:
     """ Holds metadata about the training progress of a model.
     Fields:
     - training_iterations: Number of training steps taken by the model.
+    - tokenizer_index: Path to tokenizer index file which contains information about the tokenizer used to train the model.
     """
     training_iterations: int
+    tokenizer_index: str
 
-    def __init__(self, training_iterations: int=0):
+    def __init__(
+        self,
+        training_iterations: int,
+        tokenizer_index: str,
+    ):
         """ Initialize the TrainingMetadata.
         Arguments:
         - training_iterations: See TrainingMetadata.training_iterations
+        - tokenizer_index: See TrainingMetadata.tokenizer_index
         """
         self.training_iterations = training_iterations
+        self.tokenizer_index = tokenizer_index
 
     def save(self, out_file: str):
         """ Save the training metadata to a JSON file.
@@ -39,6 +47,7 @@ class TrainingMetadata:
         with open(out_file, 'w') as out_f:
             json.dump({
                 'training_iterations': self.training_iterations,
+                'tokenizer_index': self.tokenizer_index,
             }, out_f)
 
     @staticmethod
@@ -57,6 +66,7 @@ class TrainingMetadata:
 
             return TrainingMetadata(
                 training_iterations=data['training_iterations'],
+                tokenizer_index=data['tokenizer_index'],
             )
 
 
@@ -137,6 +147,7 @@ def main():
         output_parent_dir=args.models_dir,
         model_name=args.model_name,
         config=config,
+        tokenizer_index=args.tokenizer_index,
         tokenizer_config=tokenizer_config,
         gpu=args.gpu,
         sample_every=args.sample_every,
@@ -171,6 +182,7 @@ def train(
     output_parent_dir: str,
     model_name: str,
     config: GPT2Config,
+    tokenizer_index: str,
     tokenizer_config: TokenizerConfig,
     gpu: bool,
     sample_every: int,
@@ -195,10 +207,17 @@ def train(
 
         # Training metadata
         training_meta_path = os.path.join(output_dir, "training-metadata.json")
-        training_meta = TrainingMetadata()
+        training_meta = TrainingMetadata(
+            training_iterations=0,
+            tokenizer_index=tokenizer_index,
+        )
 
         if os.path.exists(training_meta_path):
             training_meta = TrainingMetadata.load(training_meta_path)
+
+            if training_meta.tokenizer_index != tokenizer_index:
+                logger.warn(f"Training metadata specified a different tokenizer index file than invocation, stored value='{training_meta.tokenizer_index}', current value='{tokenizer_index}'")
+                training_meta.tokenizer_index = tokenizer_index
         
         num_epochs = 0
 
@@ -226,25 +245,34 @@ def train(
             
             training_meta.save(training_meta_path)
                     
-            logger.info(f"Completed {num_epochs} epochs of training resulting in {train_epoch_steps * num_epochs}, total steps {training_meta.training_iterations}")
+            logger.info(f"Completed {num_epochs} epochs of training resulting in {train_epoch_steps * num_epochs} steps of training, total steps {training_meta.training_iterations}")
             logger.info(f"Model saved into '{output_dir}' directory")
 
     # Run training with graceful shutdown
     training_thread = threading.Thread(target=do_training)
+    def do_management():
+        logger.info("Type 'quit' to stop training")
+        training_thread.start()
 
-    logger.info("Type 'quit' to stop training")
-    training_thread.start()
+        while should_train:
+            user_input = input().strip()
 
-    while should_train:
-        user_input = input().strip()
+            if user_input == 'quit':
+                should_train = False
+            else:
+                logger.info(f"Unrecognized user input command '{user_input}'")
 
-        if user_input == 'quit':
-            should_train = False
-        else:
-            logger.info(f"Unrecognized user input command '{user_input}'")
+        logger.info("Waiting for training to gracefully shut down")
+        training_thread.join()
 
-    logger.info("Waiting for training to gracefully shut down")
+    management_thread = threading.Thread(target=do_management)
+    management_thread.start()
+    
     training_thread.join()
+    if management_thread.is_alive():
+        # Stop management thread in case training thread exited on its own accord
+        management_thread.stop()
+    management_thread.join()
 
     logger.info("Done")
 
