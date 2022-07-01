@@ -41,6 +41,11 @@ def parse_args():
     )
 
     parser.add_argument(
+        '--prompt-template-file',
+        help="Location of text file which will be used as a template to insert the prompt into, the text '<PROMPT>' will be replaced with the prompt"
+    )
+
+    parser.add_argument(
         '--max-results',
         help="The maximum number of results which the model should return",
         type=int,
@@ -57,38 +62,69 @@ def main():
     model_dir = os.path.join(args.models_dir, args.model_name)
     model, training_meta = load_model(model_dir)
 
+    logger.info(f"Loaded model, trained for {training_meta.training_iterations} iterations")
+
+    # Check for prompt template file
+    prompt_template = lambda prompt: prompt
+    if args.prompt_template_file:
+        with open(args.prompt_template_file, 'r') as prompt_template_f:
+            txt = prompt_template_f.read()
+            prompt_template = lambda prompt: txt.replace('<PROMPT>', prompt)
+
     # Evaluate model
     if args.prompt is not None:
-        res = evaluate_prompt(
+        prompt = prompt_template(args.prompt)
+
+        results = evaluate_prompt(
             model=model,
             prompt=args.prompt,
-            max_results=args.max_results
+            max_results=args.max_results,
+            remove_prompt=args.prompt_template_file is not None,
         )
-        print_results(res)
+
+        print_results(
+            prompt=prompt,
+            results=results,
+        )
     elif args.interactive_prompt:
         while True:
-            prompt = input("Prompt: ").strip()
+            prompt = prompt_template(input("Prompt: ").strip())
 
-            res = evaluate_prompt(
+            results = evaluate_prompt(
                 model=model,
                 prompt=prompt,
-                max_results=args.max_results
+                max_results=args.max_results,
+                remove_prompt=args.prompt_template_file is not None,
             )
-            print_results(res)
+
+            print_results(
+                prompt=prompt,
+                results=results,
+            )
 
 def print_results(
+    prompt: str,
     results: List[str],
 ):
     """ Given a list of model results print them to the console.
     Arguments:
+    - prompt: Text which was inputted into the model to obtain results
     - results: Model evaluation results to print
     """
     bar = "=" * 20
+
+    # Show prompt
+    logger.info(f"{bar} Prompt {bar}")
+    logger.info(prompt)
+
+    # Print results
     i = 1
     for result in results:
         logger.info(f"{bar} Result {i} {bar}")
         logger.info(result)
         i += 1
+
+    logger.info("=" * ((len(bar) * 2) + len(" Result n ")))
 
 def load_model(
     model_dir: str,
@@ -115,21 +151,33 @@ def evaluate_prompt(
     model: aitextgen,
     prompt: str,
     max_results: int,
+    remove_prompt: bool,
 ) -> List[str]:
     """ Given an input prompt evaluate the model and return results.
     Arguments:
     - model: The model to evalute prompt against
     - prompt: Input text for model evaluation
     - max_results: The maximum number of results which can be returned
+    - remove_prompt: If True then any text which matches the prompt will be removed from results
 
     Returns: List of results no greater than max_results long.
     """
-    return model.generate(
+    results = model.generate(
         n=max_results,
         prompt=prompt,
         return_as_list=True,
         nonempty_output=True,
     )
+
+    # Remove the prompt from results
+    if remove_prompt:
+        results = [ result.replace(prompt, "") for result in results ]
+
+    # Remove empty results
+    results = filter(lambda result: len(result) > 0, results)
+
+
+    return results
 
 if __name__ == '__main__':
     main()

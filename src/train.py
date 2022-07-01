@@ -272,8 +272,11 @@ def train(
                 logger.info("Attempting a graceful shutdown")
                 should_graceful_exit.set()
                 return
+            elif user_input == 'help':
+                logger.info("While the model is training the following management commands are available")
+                logger.info("- quit: At the end of the next training epoch gracefully end training")
             else:
-                logger.info(f"Unrecognized user input command '{user_input}' (commands: quit)")
+                logger.info(f"Unrecognized user input command '{user_input}', type 'help' to see valid commands")
 
         logger.info("Waiting for training to gracefully shut down")
         training_thread.join()

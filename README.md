@@ -103,6 +103,7 @@ Once the Discord messages have been prepared they can be fed into the model for 
    ```bash
    python ./src/train.py --gpu
    ```
+   While training is occuring you can type `quit` into the terminal and the training process will gracefully exit when the current training epoch is finished.
 
 ## Use The Model
 Once the model has been trained prompts can be supplied and it will try to response appropriately.
@@ -111,7 +112,31 @@ Once the model has been trained prompts can be supplied and it will try to respo
    ```bash
    python ./src/evaluate.py --interactive-prompt
    ```
-   Type in a prompt for the model and hit enter, you should see the model's responses printed in the terminal.
+   Type in a prompt for the model and hit enter, you should see the model's responses printed in the terminal.  
+
+### Prompt Template Files
+The `--prompt-template-file <FILE PATH>` option specifies a file which prompts will be plugged into like a template. The text `<PROMPT>` will be replaced with the prompt inputted by the user.
+
+For example if you had a file named `prompt-template.txt` with the contents:
+```
+AI#1234: How are you doing?
+USER#5678: <PROMPT>
+AI#1234:
+```
+
+Then if you ran the training script like so:
+
+```bash
+python ./src/evaluate.py --prompt "Who goes there?" --prompt-template-file ./prompt-template.txt
+```
+
+The model would be given the prompt:
+
+```
+AI#1234: How are you doing?
+USER#5678: Who goes there?
+AI#1234:
+```
 
 # Development
 ## Creating The Anaconda Environment
