@@ -1,11 +1,17 @@
+# Python
 __pycache__
 .mypy_cache/
+.python-version
+.venv
+
 models/
+old-models/
 
 training-data/
 discord-messages/
 .env
 checkpoint/
+trained_model/
 
 samples/
 *.tar.gz
