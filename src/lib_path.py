@@ -5,31 +5,6 @@ from pathlib import PureWindowsPath, PurePosixPath
 PROG_DIR = os.path.dirname(os.path.realpath(__file__))
 REPO_DIR = os.path.realpath(os.path.join(PROG_DIR, ".."))
 
-class UnableToReconcileAbsPathError(Exception):
-    """ Indicates that an absolute path was received but it couldn't be turned into a relative path.
-    Specifically the following conditions must be met:
-    - an absolute path was received
-    - but that absolute path was determined not to be from this machine's file system
-    - and an effort was undertaken to strip the parts of the abolute path which were not from this machine's file system
-    - but not a single part of the absolute path was found to be from this project's directory structure
-
-    Fields:
-    - raw_path: The unprocessed path
-    - os_path: The path as represented by the pathlib primitive for the paths origin operating system
-    """
-    raw_path: str
-    os_path: Union[PurePosixPath, PureWindowsPath]
-
-    def __init__(self, raw_path: str, os_path: Union[PurePosixPath, PureWindowsPath]):
-        """ Initialize a UnabletoReconcileAbsPathError.
-        Arguments:
-        - raw_path: See UnableToReconcileAbsPathError.raw_path field
-        - os_path: See UnableToReconcileAbsPathError.os_path field
-        """
-        super().__init__(f"The absolute path '{raw_path}' was determined to not be from this device's file system and not from this project's directory structure")
-        self.raw_path = raw_path
-        self.os_path = os_path
-
 class LocalPath:
     """ Represents a file or directory path in the project directory.
     Fields:
@@ -43,9 +18,6 @@ class LocalPath:
         - parts: List of path parts, relative to the project root
 
         If parts happens to be an absolute path from another machine a best attempt is made to reconcile the path into something relative to the project's directory. This behavior exists because previous versions of the code saved absolute paths in metadata files, making them non-portable.
-
-        Raises:
-        - UnableToReconcileAbsPathError: If the absolute path cannot be reconciled, see error class documentation for more details
         """
         # Join parts together
         joined_parts = ""
