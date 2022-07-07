@@ -50,6 +50,7 @@ class TrainingMetadata:
                     'tokenizer_index': self.tokenizer_index.get_project_relative_path(),
                 },
                 out_f,
+                indent=4,
             )
 
     @staticmethod

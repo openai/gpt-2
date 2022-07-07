@@ -57,14 +57,18 @@ class TokenizerConfig:
         - out_path: Path to JSON file where contents will be stored
         """
         with open(out_path, 'w') as out_f:
-            json.dump({
-                'name': self.name,
-                'parent_dir': self.parent_dir.get_project_relative_path(),
-                'vocab_size': self.vocab_size,
-                'tokenizer_model_overview_file': self.tokenizer_model_overview_file.get_project_relative_path(),
-                'vocab_file': self.vocab_file.get_project_relative_path(),
-                'merges_file': self.merges_file.get_project_relative_path(),
-            }, out_f)
+            json.dump(
+                {
+                    'name': self.name,
+                    'parent_dir': self.parent_dir.get_project_relative_path(),
+                    'vocab_size': self.vocab_size,
+                    'tokenizer_model_overview_file': self.tokenizer_model_overview_file.get_project_relative_path(),
+                    'vocab_file': self.vocab_file.get_project_relative_path(),
+                    'merges_file': self.merges_file.get_project_relative_path(),
+                },
+                out_f,
+                indent=4,
+            )
 
     @staticmethod
     def load(load_path: LocalPath) -> 'TokenizerConfig':

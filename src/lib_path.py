@@ -50,7 +50,7 @@ class LocalPath:
         # Join parts together
         joined_parts = ""
         if isinstance(parts, list):
-            joined_parts = os.path.join(parts)
+            joined_parts = os.path.join(*parts)
         else:
             joined_parts = parts
 
