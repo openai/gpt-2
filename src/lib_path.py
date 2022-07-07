@@ -1,8 +1,34 @@
 from typing import List, Union
 import os
+from pathlib import PureWindowsPath, PurePosixPath
 
 PROG_DIR = os.path.dirname(os.path.realpath(__file__))
 REPO_DIR = os.path.realpath(os.path.join(PROG_DIR, ".."))
+
+class UnableToReconcileAbsPathError(Exception):
+    """ Indicates that an absolute path was received but it couldn't be turned into a relative path.
+    Specifically the following conditions must be met:
+    - an absolute path was received
+    - but that absolute path was determined not to be from this machine's file system
+    - and an effort was undertaken to strip the parts of the abolute path which were not from this machine's file system
+    - but not a single part of the absolute path was found to be from this project's directory structure
+
+    Fields:
+    - raw_path: The unprocessed path
+    - os_path: The path as represented by the pathlib primitive for the paths origin operating system
+    """
+    raw_path: str
+    os_path: Union[PurePosixPath, PureWindowsPath]
+
+    def __init__(self, raw_path: str, os_path: Union[PurePosixPath, PureWindowsPath]):
+        """ Initialize a UnabletoReconcileAbsPathError.
+        Arguments:
+        - raw_path: See UnableToReconcileAbsPathError.raw_path field
+        - os_path: See UnableToReconcileAbsPathError.os_path field
+        """
+        super().__init__(f"The absolute path '{raw_path}' was determined to not be from this device's file system and not from this project's directory structure")
+        self.raw_path = raw_path
+        self.os_path = os_path
 
 class LocalPath:
     """ Represents a file or directory path in the project directory.
@@ -15,14 +41,61 @@ class LocalPath:
         """ Initializes a LocalPath.
         Arguments:
         - parts: List of path parts, relative to the project root
+
+        Raises:
+        - UnableToReconcileAbsPathError: If the absolute path cannot be reconciled, see error class documentation for more details
         """
-        parts_list = []
+        # Join parts together
+        joined_parts = ""
         if isinstance(parts, list):
-            parts_list = parts
+            joined_parts = os.path.join(parts)
         else:
-            parts_list = [ parts ]
+            joined_parts = parts
+
+        # Fix absolute paths from other systems, this is a regression introduced in previous versions of the code where absolute paths were stored in metadata files
+        # First determine if the path is formatted in a Windows format or a Posix format
+        posix_path_parse = PurePosixPath(joined_parts)
+        windows_path_parse = PureWindowsPath(joined_parts)
+
+        # Absolute Posix paths will not be determined as absolute paths on windows and vice versa
+        # Therefore we need to determine what operating system this path was created on and check if it is absolute appropriately
+        is_absolute = False
+        path_from_os = None
+
+        if posix_path_parse.as_posix() != windows_path_parse.as_posix():
+            # A Windows absolute path fed into both the posix and windows path class and then converted back to a posix path will result in different return values from each respective class
+            # However a posix path put into both classes will result in the same return value
+            # Therefore this is a windows path
+            is_absolute = windows_path_parse.is_absolute()
+            path_from_os = windows_path_parse
+        else:
+            # This is a posix path because it did not fit the criteria described in the doc comments in the other branch
+            is_absolute = posix_path_parse.is_absolute()
+            path_from_os = posix_path_parse
+
+        if is_absolute:
+            # Determine if absolute path is from another machine
+            if not path_from_os.is_relative_to(PROG_DIR):
+                # Path not from this machine, try to remove part of path that references other machine
+                acceptable_parts = []
+                untested_parts = list(path_from_os.parts)
+
+                while len(acceptable_parts) == 0 or path_from_os.is_relative_to(os.path.join(*acceptable_parts)):
+                    print("test iteration: acceptable_parts=", acceptable_parts, "untested_parts=", untested_parts)
+                    acceptable_parts.append(untested_parts.pop())
+
+                print("after while loop: acceptable_parts=", acceptable_parts, "untested_parts=", untested_parts)
+                if len(acceptable_parts) < 2:
+                    raise UnableToReconcileAbsPathError(
+                        raw_path=joined_parts,
+                        os_path=path_from_os,
+                    )
+
+                # Grab the part of the path which is from the project
+                acceptable_parts.pop()
+                joined_parts = os.path.join(*acceptable_parts)
         
-        self.__project_relative_path = os.path.relpath(os.path.join(*parts_list), REPO_DIR)
+        self.__project_relative_path = os.path.relpath(joined_parts, REPO_DIR)
 
     def get_project_relative_path(self) -> str:
         """ Returns: Path relative to the project root directory.
@@ -34,7 +107,7 @@ class LocalPath:
         """
         return os.path.realpath(self.get_project_relative_path())
 
-    def join(self, parts: List[str]) -> LocalPath:
+    def join(self, parts: List[str]) -> 'LocalPath':
         """ Constructs a new LocalPath with parts added onto the end.
         Arguments:
         - parts: File path parts to append.

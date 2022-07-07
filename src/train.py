@@ -16,9 +16,6 @@ from build_tokenizer import TokenizerConfig
 
 logger = lib_logging.make_logger('train')
 
-PROG_DIR = os.path.dirname(os.path.realpath(__file__))
-
-
 class TrainingMetadata:
     """ Holds metadata about the training progress of a model.
     Fields:
@@ -47,10 +44,13 @@ class TrainingMetadata:
         - out_file: Path to which JSON file will be saved
         """
         with open(out_file.get_absolute_path(), 'w') as out_f:
-            json.dump({
-                'training_iterations': self.training_iterations,
-                'tokenizer_index': self.tokenizer_index.get_project_relative_path(),
-            }, out_f)
+            json.dump(
+                {
+                    'training_iterations': self.training_iterations,
+                    'tokenizer_index': self.tokenizer_index.get_project_relative_path(),
+                },
+                out_f,
+            )
 
     @staticmethod
     def load(in_file: LocalPath) -> 'TrainingMetadata':
