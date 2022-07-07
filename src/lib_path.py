@@ -42,6 +42,8 @@ class LocalPath:
         Arguments:
         - parts: List of path parts, relative to the project root
 
+        If parts happens to be an absolute path from another machine a best attempt is made to reconcile the path into something relative to the project's directory. This behavior exists because previous versions of the code saved absolute paths in metadata files, making them non-portable.
+
         Raises:
         - UnableToReconcileAbsPathError: If the absolute path cannot be reconciled, see error class documentation for more details
         """
@@ -57,7 +59,7 @@ class LocalPath:
         posix_path_parse = PurePosixPath(joined_parts)
         windows_path_parse = PureWindowsPath(joined_parts)
 
-        # Absolute Posix paths will not be determined as absolute paths on windows and vice versa
+        # Absolute Posix paths will not be determined as absolute paths on Windows and vice versa
         # Therefore we need to determine what operating system this path was created on and check if it is absolute appropriately
         is_absolute = False
         path_from_os = None
@@ -77,24 +79,32 @@ class LocalPath:
             # Determine if absolute path is from another machine
             if not path_from_os.is_relative_to(PROG_DIR):
                 # Path not from this machine, try to remove part of path that references other machine
-                acceptable_parts = []
-                untested_parts = list(path_from_os.parts)
+                # First try to build by appending all non file (nf) name parts
+                parts = list(path_from_os.parts)
+                acceptable_parts_nf = [ parts.pop() ]
 
-                while len(acceptable_parts) == 0 or path_from_os.is_relative_to(os.path.join(*acceptable_parts)):
-                    print("test iteration: acceptable_parts=", acceptable_parts, "untested_parts=", untested_parts)
-                    acceptable_parts.append(untested_parts.pop())
+                while os.path.splitext(parts[len(parts) - 1])[1] != "":
+                    acceptable_parts_nf.append(parts.pop())
 
-                print("after while loop: acceptable_parts=", acceptable_parts, "untested_parts=", untested_parts)
-                if len(acceptable_parts) < 2:
-                    raise UnableToReconcileAbsPathError(
-                        raw_path=joined_parts,
-                        os_path=path_from_os,
-                    )
+                # Then try to build by finding existing (e) files and directories
+                parts = list(path_from_os.parts)[1:]
+                acceptable_parts_e = []
 
-                # Grab the part of the path which is from the project
-                acceptable_parts.pop()
-                joined_parts = os.path.join(*acceptable_parts)
-        
+                # Add parts to the list if they point towards existing files
+                while len(parts) > 0 or len(acceptable_parts_e) == 0:
+                    part_zero = parts.pop(0)
+                    if os.path.exists(os.path.join(REPO_DIR, *[*acceptable_parts_e, part_zero])):
+                        acceptable_parts_e.append(part_zero)
+
+                # Use the solution which found the longest path
+                if len(acceptable_parts_nf) + len(acceptable_parts_e) > 0:
+                    if len(acceptable_parts_nf) > len(acceptable_parts_e):
+                        joined_parts = os.path.join(*acceptable_parts_nf)
+                    else:
+                        joined_parts = os.path.join(*acceptable_parts_e)
+
+                
+        # Save relative path
         self.__project_relative_path = os.path.relpath(joined_parts, REPO_DIR)
 
     def get_project_relative_path(self) -> str:
