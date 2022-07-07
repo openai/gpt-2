@@ -10,6 +10,7 @@ from aitextgen.utils import build_gpt2_config
 from transformers import GPT2Config 
 
 import lib_logging
+from lib_path import LocalPath
 from build_tokenizer import TokenizerConfig
 
 logger = lib_logging.make_logger('train')
@@ -24,12 +25,12 @@ class TrainingMetadata:
     - tokenizer_index: Path to tokenizer index file which contains information about the tokenizer used to train the model.
     """
     training_iterations: int
-    tokenizer_index: str
+    tokenizer_index: LocalPath
 
     def __init__(
         self,
         training_iterations: int,
-        tokenizer_index: str,
+        tokenizer_index: LocalPath,
     ):
         """ Initialize the TrainingMetadata.
         Arguments:
@@ -39,19 +40,19 @@ class TrainingMetadata:
         self.training_iterations = training_iterations
         self.tokenizer_index = tokenizer_index
 
-    def save(self, out_file: str):
+    def save(self, out_file: LocalPath):
         """ Save the training metadata to a JSON file.
         Arguments:
         - out_file: Path to which JSON file will be saved
         """
-        with open(out_file, 'w') as out_f:
+        with open(out_file.get_absolute_path(), 'w') as out_f:
             json.dump({
                 'training_iterations': self.training_iterations,
-                'tokenizer_index': self.tokenizer_index,
+                'tokenizer_index': self.tokenizer_index.get_project_relative_path(),
             }, out_f)
 
     @staticmethod
-    def load(in_file: str) -> 'TrainingMetadata':
+    def load(in_file: LocalPath) -> 'TrainingMetadata':
         """ Load training metadata from a JSON file.
         Arguments:
         - in_file: Path to JSON file which will be loaded
@@ -61,12 +62,12 @@ class TrainingMetadata:
         Raises:
         - KeyError: If JSON file doesn't contain value required
         """
-        with open(in_file, 'r') as in_f:
+        with open(in_file.get_absolute_path(), 'r') as in_f:
             data = json.load(in_f)
 
             return TrainingMetadata(
                 training_iterations=data['training_iterations'],
-                tokenizer_index=data['tokenizer_index'],
+                tokenizer_index=LocalPath(data['tokenizer_index']),
             )
 
 
@@ -82,22 +83,22 @@ def parse_args():
     parser.add_argument(
         '--tokenizer-index',
         help="Path to tokenizer input file which specifies which tokenizer to use",
-        type=str,
-        default=os.path.realpath(os.path.join(PROG_DIR, "../training-data/tokenizer-index.json")),
+        type=LocalPath,
+        default=LocalPath("training-data/tokenizer-index.json"),
     )
    
     parser.add_argument(
         '--dataset',
         help="Path to training dataset file",
-        type=str,
-        default=os.path.realpath(os.path.join(PROG_DIR, "../training-data/discord-messages.txt")),
+        type=LocalPath,
+        default=LocalPath("training-data/discord-messages.txt"),
     )
 
     parser.add_argument(
         '--models-dir',
         help="Parent directory where models will be saved",
-        type=str,
-        default="models",
+        type=LocalPath,
+        default=LocalPath("models"),
     )
     parser.add_argument(
         '--model-name',
@@ -165,32 +166,39 @@ def main():
 
 def load_dataset(
     tokenizer_config: TokenizerConfig,
-    dataset: str,
+    dataset: LocalPath,
 ) -> (TokenDataset, GPT2Config):
+    """ Encode training dataset and create a GPT-2 configuration which targets the dataset.
+    Arguments:
+    - tokenizer_config: Parameters of the Tokenizer which should be used to encode dataset
+    - dataset: Path to dataset file
+
+    Returns: (Tokenizer dataset, Configuration for a GPT-2 model preset to use the tokenized dataset)
+    """
     # Check if encoded cache exists
-    encoded_dataset_path = os.path.splitext(dataset)[0] + '.tar.gz'
+    encoded_dataset_path = os.path.splitext(dataset.get_absolute_path())[0] + '.tar.gz'
     dataset_kwargs = {}
 
     if os.path.exists(encoded_dataset_path):
-        dataset_kwargs['from_cache'] = encoded_dataset_path
+        dataset_kwargs['from_cache'] = encoded_dataset_path.get_absolute_path()
     
     # Load dataset
     data = TokenDataset(
-        file_path=dataset,
-        vocab_file=tokenizer_config.vocab_file,
-        merges_file=tokenizer_config.merges_file,
+        file_path=dataset.get_absolute_path(),
+        vocab_file=tokenizer_config.vocab_file.get_absolute_path(),
+        merges_file=tokenizer_config.merges_file.get_absolute_path(),
         #**dataset_kwargs,
     )
-    config = build_gpt2_config(vocab_size=tokenizer_config.vocab_size)
+    config = build_gpt2_config(vocab_size=tokenizer_config.vocab_size.get_absolute_path())
 
     return (data, config)
 
 def train(
     data: TokenDataset,
-    output_parent_dir: str,
+    output_parent_dir: LocalPath,
     model_name: str,
     config: GPT2Config,
-    tokenizer_index: str,
+    tokenizer_index: LocalPath,
     tokenizer_config: TokenizerConfig,
     gpu: bool,
     sample_every: int,
@@ -198,9 +206,23 @@ def train(
     train_epoch_steps: int,
     checkpoint_every_epochs: int,
 ):
+    """ Train the model.
+    Arguments:
+    - data: Training dataset to feed to the model
+    - output_parent_dir: Directory in which model sub-directories can be found
+    - model_name: Name of sub-directory inside output_parent_dir in which model training data will be stored
+    - config: AITextGen GPT-2 model configuration to use for training
+    - tokenizer_index: Path to file which contains tokenizer parameters
+    - tokenizer_config: Parameters of tokenizer loaded from tokenizer_index
+    - gpu: If the model should be trained on a GPU
+    - sample_every: How many training iterations should pass between samples being taken from the model being trained
+    - target_epochs: The number of epochs of training which should be completed, set to a negative number to train infinitely
+    - train_epoch_steps: The number of training iterations which should be completed in each epoch, this is also the number of steps which will be completed before the logic checks if training should gracefully exit
+    - checkpoint_every_epochs: The number of epochs which should pass between backups of the model being made in the model directory
+    """
     # Create model
     model = aitextgen(
-        tokenizer_file=tokenizer_config.tokenizer_model_overview_file,
+        tokenizer_file=tokenizer_config.tokenizer_model_overview_file.get_absolute_path(),
         config=config,
         to_gpu=gpu,
     )
@@ -212,31 +234,35 @@ def train(
         """
 
         # Model storage
-        output_dir = os.path.join(output_parent_dir, model_name)
-        logger.info(f"Saving model into '{output_dir}' directory")
+        output_dir = output_parent_dir.join([model_name])
+        logger.info(f"Saving model into '{output_dir.get_project_relative_path()}' directory")
 
         # Training metadata
-        training_meta_path = os.path.join(output_dir, "training-metadata.json")
+        training_meta_path = output_dir.join(["training-metadata.json"])
         training_meta = TrainingMetadata(
             training_iterations=0,
-            tokenizer_index=tokenizer_index,
+            tokenizer_index=tokenizer_index.get_project_relative_path(),
         )
 
-        if os.path.exists(training_meta_path):
+        if os.path.exists(training_meta_path.get_absolute_path()):
             training_meta = TrainingMetadata.load(training_meta_path)
 
             if training_meta.tokenizer_index != tokenizer_index:
                 logger.warn(f"Training metadata specified a different tokenizer index file than invocation, stored value='{training_meta.tokenizer_index}', current value='{tokenizer_index}'")
-                training_meta.tokenizer_index = tokenizer_index
-        
-        num_epochs = 0
+                training_meta.tokenizer_index = tokenizer_index.get_project_relative_path()
+    
 
         # Do training
+        num_epochs = 0
+        
         try:
             num_epochs_since_checkpoint = 0
+
+            # Loop until the graceful exit flag is set or the number of target epochs is met (If there even is a number of target epochs)
             while not should_graceful_exit.is_set() and (num_epochs < target_epochs or target_epochs < 0):
+                # Run one epoch of training
                 model.train(
-                    output_dir=output_dir,
+                    output_dir=output_dir.get_absolute_path(),
                     train_data=data,
                     num_workers=1, # Required or else training on GPUs won't work
                     generate_every=sample_every,
@@ -244,6 +270,7 @@ def train(
                     progress_bar_refresh_rate=1
                 )
 
+                # Increment counters
                 num_epochs += 1
                 num_epochs_since_checkpoint += 1
                 training_meta.training_iterations += train_epoch_steps
@@ -252,11 +279,13 @@ def train(
                 
                 training_meta.save(training_meta_path)
 
+                # If we should make a checkpoint
                 if num_epochs_since_checkpoint >= checkpoint_every_epochs:
-                    checkpoint_dir = os.path.join(output_dir, f"checkpoint-{training_meta.training_iterations}")
+                    checkpoint_dir = output_dir.join([f"checkpoint-{training_meta.training_iterations}"])
                     model.save(checkpoint_dir)
-                    training_meta.save(os.path.join(checkpoint_dir, "training-metadata.json"))
-                    logger.info(f"Model checkpoint saved into '{checkpoint_dir}' directory")
+                    
+                    training_meta.save(checkpoint_dir.join(["training-metadata.json"]))
+                    logger.info(f"Model checkpoint saved into '{checkpoint_dir.get_project_relative_path()}' directory")
 
                     num_epochs_since_checkpoint = 0
         except Exception as e:
@@ -268,11 +297,16 @@ def train(
             training_meta.save(training_meta_path)
                     
             logger.info(f"Completed {num_epochs} epochs of training resulting in {train_epoch_steps * num_epochs} steps of training, total steps {training_meta.training_iterations}")
-            logger.info(f"Model saved into '{output_dir}' directory")
+            logger.info(f"Model saved into '{output_dir.get_project_relative_path()}' directory")
 
     # Run training with graceful shutdown
     should_graceful_exit = threading.Event()
-    training_thread = threading.Thread(target=do_training, kwargs={'should_graceful_exit': should_graceful_exit})
+    training_thread = threading.Thread(
+        target=do_training,
+        kwargs={
+            'should_graceful_exit': should_graceful_exit,
+        },
+    )
 
     def do_management(should_graceful_exit: threading.Event):
         """ Allow user to gracefully exit the training process.
@@ -299,7 +333,12 @@ def train(
         logger.info("Waiting for training to gracefully shut down")
         training_thread.join()
 
-    management_thread = threading.Thread(target=do_management, kwargs={'should_graceful_exit': should_graceful_exit})
+    management_thread = threading.Thread(
+        target=do_management,
+        kwargs={
+            'should_graceful_exit': should_graceful_exit,
+        },
+    )
     management_thread.start()
     
     training_thread.join()

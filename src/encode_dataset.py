@@ -6,11 +6,10 @@ from typing import Optional, List
 from aitextgen.TokenDataset import TokenDataset
 
 import lib_logging
+from lib_path import LocalPath
 from build_tokenizer import TokenizerConfig
 
 logger = lib_logging.make_logger('encode-dataset')
-
-PROG_DIR = os.path.dirname(os.path.realpath(__file__))
 
 def parse_args():
     """ Parse command line arguments.
@@ -21,20 +20,20 @@ def parse_args():
     parser.add_argument(
         '--dataset-in',
         help="Path to training data input file",
-        type=str,
-        default=os.path.realpath(os.path.join(PROG_DIR, "../training-data/discord-messages.txt")),
+        type=LocalPath,
+        default=LocalPath("training-data/discord-messages.txt"),
     )
     parser.add_argument(
         '--dataset-out',
         help="Path to which encoded training data will be saved",
-        type=str,
-        default=os.path.realpath(os.path.join(PROG_DIR, "../training-data/discord-messages.tar.gz")),
+        type=LocalPath,
+        default=LocalPath("training-data/discord-messages.tar.gz"),
     )
     parser.add_argument(
         '--tokenizer-index',
         help="Path to tokenizer input file which specifies which tokenizer to use",
-        type=str,
-        default=os.path.realpath(os.path.join(PROG_DIR, "../training-data/tokenizer-index.json")),
+        type=LocalPath,
+        default=LocalPath("training-data/tokenizer-index.json"),
     )
 
     # Parse results
@@ -54,8 +53,8 @@ def main():
     )
 
 def encode_dataset(
-    dataset_in: str,
-    dataset_out: str,
+    dataset_in: LocalPath,
+    dataset_out: LocalPath,
     tokenizer_config: TokenizerConfig,
 ):
     """ Given a dataset encodes the contents using the tokenizer. Saves the results.
@@ -65,11 +64,11 @@ def encode_dataset(
     - tokenizer_config: Information about the tokenizer
     """
     TokenDataset(
-        file_path=dataset_in,
-        vocab_file=tokenizer_config.vocab_file,
-        merges_file=tokenizer_config.merges_file,
+        file_path=dataset_in.get_absolute_path(),
+        vocab_file=tokenizer_config.vocab_file.get_absolute_path(),
+        merges_file=tokenizer_config.merges_file.get_absolute_path(),
         save_cache=True,
-        cache_destination=dataset_out,
+        cache_destination=dataset_out.get_absolute_path(),
     )
 
 if __name__ == '__main__':

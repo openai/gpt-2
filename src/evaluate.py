@@ -5,6 +5,7 @@ from typing import List
 from aitextgen import aitextgen
 
 import lib_logging
+from lib_path import LocalPath
 from train import TrainingMetadata
 from build_tokenizer import TokenizerConfig
 
@@ -18,8 +19,8 @@ def parse_args():
     parser.add_argument(
         '--models-dir',
         help="Parent directory where models are saved",
-        type=str,
-        default="models",
+        type=LocalPath,
+        default=LocalPath("models"),
     )
     parser.add_argument(
         '--model-name',
@@ -42,7 +43,8 @@ def parse_args():
 
     parser.add_argument(
         '--prompt-template-file',
-        help="Location of text file which will be used as a template to insert the prompt into, the text '<PROMPT>' will be replaced with the prompt"
+        help="Location of text file which will be used as a template to insert the prompt into, the text '<PROMPT>' will be replaced with the prompt",
+        type=LocalPath,
     )
 
     parser.add_argument(
@@ -59,7 +61,7 @@ def main():
     args = parse_args()
 
     # Load the model
-    model_dir = os.path.join(args.models_dir, args.model_name)
+    model_dir = args.models_dir.join([args.model_name])
     model, training_meta = load_model(model_dir)
 
     logger.info(f"Loaded model, trained for {training_meta.training_iterations} iterations")
@@ -67,7 +69,7 @@ def main():
     # Check for prompt template file
     prompt_template = lambda prompt: prompt
     if args.prompt_template_file:
-        with open(args.prompt_template_file, 'r') as prompt_template_f:
+        with open(args.prompt_template_file.get_absolute_path(), 'r') as prompt_template_f:
             txt = prompt_template_f.read()
             prompt_template = lambda prompt: txt.replace('<PROMPT>', prompt)
 
@@ -127,7 +129,7 @@ def print_results(
     logger.info("=" * ((len(bar) * 2) + len(" Result n ")))
 
 def load_model(
-    model_dir: str,
+    model_dir: LocalPath,
 ) -> (aitextgen, TrainingMetadata):
     """ Loads a trained model from the file system.
     Arguments:
@@ -136,13 +138,13 @@ def load_model(
     Returns: Loaded model.
     """
     # Load training metadata
-    training_meta = TrainingMetadata.load(os.path.join(model_dir, "training-metadata.json"))
+    training_meta = TrainingMetadata.load(model_dir.join(["training-metadata.json"]))
     tokenizer_config = TokenizerConfig.load(training_meta.tokenizer_index)
 
     # Load model
     model = aitextgen(
-        model_folder=model_dir,
-        tokenizer_file=tokenizer_config.tokenizer_model_overview_file,
+        model_folder=model_dir.get_absolute_path(),
+        tokenizer_file=tokenizer_config.tokenizer_model_overview_file.get_absolute_path(),
     )
 
     return (model, training_meta)

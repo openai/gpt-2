@@ -6,10 +6,9 @@ from typing import Optional, List
 from tokenizers import ByteLevelBPETokenizer
 
 import lib_logging
+from lib_path import LocalPath
 
 logger = lib_logging.make_logger('build-tokenizer')
-
-PROG_DIR = os.path.dirname(os.path.realpath(__file__))
 
 class TokenizerConfig:
     """ Holds parameters and information for a tokenizer.
@@ -22,20 +21,20 @@ class TokenizerConfig:
     - vocab_size: Number of words in the tokenizer's vocabulary
     """
     name: str
-    parent_dir: str
-    tokenizer_model_overview_file: str
-    vocab_file: str
-    merges_file: str
+    parent_dir: LocalPath
+    tokenizer_model_overview_file: LocalPath
+    vocab_file: LocalPath
+    merges_file: LocalPath
     vocab_size: int
 
     def __init__(
         self,
-        parent_dir: str,
+        parent_dir: LocalPath,
         name: str,
         vocab_size: int,
-        tokenizer_model_overview_file: Optional[str]=None,
-        vocab_file: Optional[str]=None,
-        merges_file: Optional[str]=None,
+        tokenizer_model_overview_file: Optional[LocalPath]=None,
+        vocab_file: Optional[LocalPath]=None,
+        merges_file: Optional[LocalPath]=None,
     ):
         """ Initializes a TokenizerConfig.
         Arguments:
@@ -48,9 +47,9 @@ class TokenizerConfig:
         self.parent_dir = parent_dir
         self.vocab_size = vocab_size
 
-        self.tokenizer_model_overview_file = tokenizer_model_overview_file or os.path.join(parent_dir, f"{name}-model-overview.json")
-        self.vocab_file = vocab_file or os.path.join(parent_dir, f"{name}-vocab.json")
-        self.merges_file = merges_file or os.path.join(parent_dir, f"{name}-merges.txt")
+        self.tokenizer_model_overview_file = tokenizer_model_overview_file or self.parent_dir.join([f"{name}-model-overview.json"])
+        self.vocab_file = vocab_file or self.parent_dir.join([f"{name}-vocab.json"])
+        self.merges_file = merges_file or self.parent_dir.join([f"{name}-merges.txt"])
 
     def save(self, out_path: str):
         """ Saves the TokenizerConfig to a file.
@@ -60,15 +59,15 @@ class TokenizerConfig:
         with open(out_path, 'w') as out_f:
             json.dump({
                 'name': self.name,
-                'parent_dir': self.parent_dir,
-                'vocab_size': self.vocab_size,
-                'tokenizer_model_overview_file': self.tokenizer_model_overview_file,
-                'vocab_file': self.vocab_file,
-                'merges_file': self.merges_file,
+                'parent_dir': self.parent_dir.get_project_relative_path(),
+                'vocab_size': self.vocab_size.get_project_relative_path(),
+                'tokenizer_model_overview_file': self.tokenizer_model_overview_file.get_project_relative_path(),
+                'vocab_file': self.vocab_file.get_project_relative_path(),
+                'merges_file': self.merges_file.get_project_relative_path(),
             }, out_f)
 
     @staticmethod
-    def load(load_path: str) -> 'TokenizerConfig':
+    def load(load_path: LocalPath) -> 'TokenizerConfig':
         """ Loads a TokenizerConfig from a file.
         Arguments:
         - load_path: Path from which to load config
@@ -78,16 +77,16 @@ class TokenizerConfig:
         Raises:
         - KeyError: If a required TokenizerConfig is not present in the file
         """
-        with open(load_path, 'r') as load_f:
+        with open(load_path.get_absolute_path(), 'r') as load_f:
             data = json.load(load_f)
 
             return TokenizerConfig(
                 name=data['name'],
-                parent_dir=data['parent_dir'],
+                parent_dir=LocalPath(data['parent_dir']),
                 vocab_size=data['vocab_size'],
-                tokenizer_model_overview_file=data['tokenizer_model_overview_file'],
-                vocab_file=data['vocab_file'],
-                merges_file=data['merges_file'],
+                tokenizer_model_overview_file=LocalPath(data['tokenizer_model_overview_file']),
+                vocab_file=LocalPath(data['vocab_file']),
+                merges_file=LocalPath(data['merges_file']),
             )
 
 def parse_args():
@@ -99,22 +98,22 @@ def parse_args():
     parser.add_argument(
         '--dataset-in',
         help="Path to training data input file",
-        type=str,
-        default=os.path.realpath(os.path.join(PROG_DIR, "../training-data/discord-messages.txt")),
+        type=LocalPath,
+        default=LocalPath("training-data/discord-messages.txt"),
     )
 
     parser.add_argument(
         '--tokenizer-index-out',
         help="Path of JSON file to save tokenizer configuration values",
-        type=str,
-        default=os.path.realpath(os.path.join(PROG_DIR, "../training-data/tokenizer-index.json"))
+        type=LocalPath,
+        default=LocalPath("training-data/tokenizer-index.json"),
     )
 
     parser.add_argument(
         '--tokenizer-out-dir',
         help="Path to directory where tokenizer results files will be saved",
-        type=str,
-        default=os.path.realpath(os.path.join(PROG_DIR, "../training-data")),
+        type=LocalPath,
+        default=LocalPath("training-data"),
     )
     parser.add_argument(
         '--tokenizer-name',
@@ -165,21 +164,28 @@ def main():
     )
 
     tokenizer_config.save(args.tokenizer_index_out)
-    logger.info(f"Saved tokenizer index file to '{args.tokenizer_index_out}'")
+    logger.info(f"Saved tokenizer index file to '{args.tokenizer_index_out.get_project_relative_path()}'")
 
 def train_tokenizer(
-    dataset_in: str,
+    dataset_in: LocalPath,
     tokenizer_config: TokenizerConfig,
     sample_start_token: str,
     sample_end_token: str,
 ):
+    """ Given a dataset generate a vocabulary and BPE encoding.
+    Arguments:
+    - dataset_in: Path to dataset file
+    - tokenizer_config: Configuration for tokenizer properties and output
+    - sample_start_token: Token used to delineate the start of a sample
+    - sample_end_token: Token used to delineate the end of a sample
+    """
     tokenizer = ByteLevelBPETokenizer(
         dropout=None,
         trim_offsets=True,
     )
 
     tokenizer.train(
-        files=[dataset_in],
+        files=[dataset_in.get_absolute_path()],
         vocab_size=tokenizer_config.vocab_size,
         min_frequency=2,
         special_tokens=[
@@ -188,10 +194,10 @@ def train_tokenizer(
         ]
     )
     
-    tokenizer.save(tokenizer_config.tokenizer_model_overview_file)
-    tokenizer.save_model(tokenizer_config.parent_dir, tokenizer_config.name)
+    tokenizer.save(tokenizer_config.tokenizer_model_overview_file.get_absolute_path())
+    tokenizer.save_model(tokenizer_config.parent_dir.get_absolute_path(), tokenizer_config.name)
 
-    logger.info(f"Encoded tokenizer '{tokenizer_config.name}' on '{dataset_in}' and saved to '{tokenizer_config.parent_dir}'")
+    logger.info(f"Encoded tokenizer '{tokenizer_config.name}' on '{dataset_in.get_project_relative_path()}' and saved to '{tokenizer_config.parent_dir.get_project_relative_path()}'")
 
 
 if __name__ == '__main__':

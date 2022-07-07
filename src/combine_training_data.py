@@ -4,24 +4,23 @@ import glob
 import argparse
 
 import lib_logging
+from lib_path import LocalPath
 
 logger = lib_logging.make_logger('combine-training-data')
-
-PROG_DIR = os.path.dirname(os.path.realpath(__file__))
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Combine Discord messages into a training data set file.")
     parser.add_argument(
         '--discord-messages-dir',
         help="Directory in which Discord channel message JSON dumps are stored",
-        type=str,
-        default=os.path.realpath(os.path.join(PROG_DIR, "../discord-messages")),
+        type=LocalPath,
+        default=LocalPath("discord-messages"),
     )
     parser.add_argument(
         '--training-data-out',
         help="File in which training data will be outputted",
-        type=str,
-        default=os.path.realpath(os.path.join(PROG_DIR, "../training-data/discord-messages.txt")),
+        type=LocalPath,
+        default=LocalPath("training-data/discord-messages.txt"),
     )
 
     parser.add_argument(
@@ -58,20 +57,30 @@ def main():
     )
 
 def combine_training_data(
-    discord_messages_dir: str,
-    training_data_out: str,
+    discord_messages_dir: LocalPath,
+    training_data_out: LocalPath,
     prepend_authors: bool,
     sample_start_token: str,
     sample_end_token: str,
 ):
+    """ Given a directory of Discord channel message JSON dumps combine them into a single text file full of samples with which the model can be trained.
+    Arguments:
+    - discord_messages_dir: Directory in which Discord channel message JSON dumps are contained
+    - training_data_out: Path where combined training data text file will be saved
+    - prepend_authors: If True the author of each Discord message will be prepended before each sample
+    - sample_start_token: Token used to delineate the start of a sample
+    - sample_end_token: Token used to delineate the end of a sample
+    """
     # Make directory in which to output training data
-    training_data_out_dir = os.path.dirname(training_data_out)
+    training_data_out_dir = os.path.dirname(training_data_out.get_absolute_path())
     if not os.path.isdir(training_data_out_dir):
         os.makedirs(training_data_out_dir)
 
     # Combine
     def extract_discord_msg(msg):
         """ Based on the arguments to combine_training_data make a Discord message dump into a string.
+        Arguments:
+        - msg: Discord message dump object
         """
         out = []
 
@@ -97,7 +106,7 @@ def combine_training_data(
         return "".join(out)
 
     num_msgs = 0
-    with open(training_data_out, "w", encoding="utf8") as training_data_f:
+    with open(training_data_out.get_absolute_path(), "w", encoding="utf8") as training_data_f:
         # For each discord channel message JSON dump file
         for discord_msg_file_path in glob.glob(f"{discord_messages_dir}/*"):
             with open(discord_msg_file_path, "r", encoding="utf8") as discord_msg_f:
