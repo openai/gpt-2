@@ -116,3 +116,4 @@ dependencies:
     - transformers==4.20.1
     - werkzeug==2.1.2
     - yarl==1.7.2
+    - mypy==0.961

@@ -1,2 +1,3 @@
 aitextgen
 tokenizers
+mypy
