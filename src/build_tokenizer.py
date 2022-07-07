@@ -60,7 +60,7 @@ class TokenizerConfig:
             json.dump({
                 'name': self.name,
                 'parent_dir': self.parent_dir.get_project_relative_path(),
-                'vocab_size': self.vocab_size.get_project_relative_path(),
+                'vocab_size': self.vocab_size,
                 'tokenizer_model_overview_file': self.tokenizer_model_overview_file.get_project_relative_path(),
                 'vocab_file': self.vocab_file.get_project_relative_path(),
                 'merges_file': self.merges_file.get_project_relative_path(),

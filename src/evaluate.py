@@ -1,6 +1,6 @@
 import argparse
 import os
-from typing import List
+from typing import List, Tuple
 
 from aitextgen import aitextgen
 
@@ -130,7 +130,7 @@ def print_results(
 
 def load_model(
     model_dir: LocalPath,
-) -> (aitextgen, TrainingMetadata):
+) -> Tuple[aitextgen, TrainingMetadata]:
     """ Loads a trained model from the file system.
     Arguments:
     - model_dir: The directory in which the model data resides

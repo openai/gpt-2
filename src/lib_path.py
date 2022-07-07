@@ -32,7 +32,7 @@ class LocalPath:
     def get_absolute_path(self) -> str:
         """ Returns: Path relative to file system root.
         """
-        return return os.path.realpath(self.get_project_relative_path())
+        return os.path.realpath(self.get_project_relative_path())
 
     def join(self, parts: List[str]) -> LocalPath:
         """ Constructs a new LocalPath with parts added onto the end.

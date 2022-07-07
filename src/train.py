@@ -3,6 +3,7 @@ import os
 import sys
 import json
 import threading
+from typing import Tuple
 
 from aitextgen import aitextgen
 from aitextgen.TokenDataset import TokenDataset
@@ -167,7 +168,7 @@ def main():
 def load_dataset(
     tokenizer_config: TokenizerConfig,
     dataset: LocalPath,
-) -> (TokenDataset, GPT2Config):
+) -> Tuple[TokenDataset, GPT2Config]:
     """ Encode training dataset and create a GPT-2 configuration which targets the dataset.
     Arguments:
     - tokenizer_config: Parameters of the Tokenizer which should be used to encode dataset
@@ -180,7 +181,7 @@ def load_dataset(
     dataset_kwargs = {}
 
     if os.path.exists(encoded_dataset_path):
-        dataset_kwargs['from_cache'] = encoded_dataset_path.get_absolute_path()
+        dataset_kwargs['from_cache'] = encoded_dataset_path
     
     # Load dataset
     data = TokenDataset(
@@ -189,7 +190,7 @@ def load_dataset(
         merges_file=tokenizer_config.merges_file.get_absolute_path(),
         #**dataset_kwargs,
     )
-    config = build_gpt2_config(vocab_size=tokenizer_config.vocab_size.get_absolute_path())
+    config = build_gpt2_config(vocab_size=tokenizer_config.vocab_size)
 
     return (data, config)
 
@@ -241,7 +242,7 @@ def train(
         training_meta_path = output_dir.join(["training-metadata.json"])
         training_meta = TrainingMetadata(
             training_iterations=0,
-            tokenizer_index=tokenizer_index.get_project_relative_path(),
+            tokenizer_index=tokenizer_index,
         )
 
         if os.path.exists(training_meta_path.get_absolute_path()):
@@ -249,7 +250,7 @@ def train(
 
             if training_meta.tokenizer_index != tokenizer_index:
                 logger.warn(f"Training metadata specified a different tokenizer index file than invocation, stored value='{training_meta.tokenizer_index}', current value='{tokenizer_index}'")
-                training_meta.tokenizer_index = tokenizer_index.get_project_relative_path()
+                training_meta.tokenizer_index = tokenizer_index
     
 
         # Do training
@@ -342,9 +343,6 @@ def train(
     management_thread.start()
     
     training_thread.join()
-    if management_thread.is_alive():
-        # Stop management thread in case training thread exited on its own accord
-        management_thread.stop()
     management_thread.join()
 
     logger.info("Done")
