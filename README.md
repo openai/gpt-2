@@ -1,3 +1,11 @@
+# Rust Notes and Resources
+
+https://docs.rs/rust-bert/latest/rust_bert/gpt2/
+https://www.arewelearningyet.com/
+https://github.com/dangolbeeker/Awesome-Rust-MachineLearning
+
+
+
 **Status:** Archive (code is provided as-is, no updates expected)
 
 # gpt-2
