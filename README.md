@@ -1,6 +1,6 @@
 **Status:** Archive (code is provided as-is, no updates expected)
 
-# gpt-2
+# gpt-2.
 
 Code and models from the paper ["Language Models are Unsupervised Multitask Learners"](https://d4mucfpksywv.cloudfront.net/better-language-models/language-models.pdf).
 
@@ -10,7 +10,7 @@ We have also [released a dataset](https://github.com/openai/gpt-2-output-dataset
 
 <sup>*</sup> *Note that our original parameter counts were wrong due to an error (in our previous blog posts and paper).  Thus you may have seen small referred to as 117M and medium referred to as 345M.*
 
-## Usage
+## Usage.
 
 This repository is meant to be a starting point for researchers and engineers to experiment with GPT-2.
 
@@ -28,15 +28,15 @@ Please [let us know](mailto:languagequestions@openai.com) if you’re doing inte
 - Potential malicious use cases and defenses against them (e.g. the detectability of synthetic text)
 - The extent of problematic content (e.g. bias) being baked into the models and effective mitigations
 
-## Development
+## Development.
 
 See [DEVELOPERS.md](./DEVELOPERS.md)
 
-## Contributors
+## Contributors.
 
 See [CONTRIBUTORS.md](./CONTRIBUTORS.md)
 
-## Citation
+## Citation.
 
 Please use the following bibtex entry:
 ```
