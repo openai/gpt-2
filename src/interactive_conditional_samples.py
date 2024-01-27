@@ -27,7 +27,8 @@ def interact_model(
     :nsamples=1 : Number of samples to return total
     :batch_size=1 : Number of batches (only affects speed/memory).  Must divide nsamples.
     :length=None : Number of tokens in generated text, if None (default), is
-     determined by model hyperparameters
+     determined by model hyperparameters. Changing this setting has an effect on
+     the maximum number of tokens allowed for input.
     :temperature=1 : Float value controlling randomness in boltzmann
      distribution. Lower temperature results in less random completions. As the
      temperature approaches zero, the model will become deterministic and
@@ -49,10 +50,11 @@ def interact_model(
     with open(os.path.join(models_dir, model_name, 'hparams.json')) as f:
         hparams.override_from_dict(json.load(f))
 
-    if length is None:
+    if length is None or length <= 0:
         length = hparams.n_ctx // 2
-    elif length > hparams.n_ctx:
-        raise ValueError("Can't get samples longer than window size: %s" % hparams.n_ctx)
+    elif length >= hparams.n_ctx:
+        raise ValueError("Can't get samples longer or equal to window size: %s" % hparams.n_ctx)
+    input_length = hparams.n_ctx - length
 
     with tf.Session(graph=tf.Graph()) as sess:
         context = tf.placeholder(tf.int32, [batch_size, None])
@@ -70,11 +72,16 @@ def interact_model(
         saver.restore(sess, ckpt)
 
         while True:
-            raw_text = input("Model prompt >>> ")
-            while not raw_text:
-                print('Prompt should not be empty!')
+            context_length = 0
+            while context_length <= 0 or context_length > input_length:
                 raw_text = input("Model prompt >>> ")
-            context_tokens = enc.encode(raw_text)
+                context_tokens = enc.encode(raw_text)
+                context_length = len(context_tokens)
+                if context_length <= 0:
+                    print('Prompt should not be empty!')
+                elif context_length > input_length:
+                    print('Number of tokens should be in range of 1 - ' + str(input_length) + ', got: ' + str(context_length) + '!')
+
             generated = 0
             for _ in range(nsamples // batch_size):
                 out = sess.run(output, feed_dict={
