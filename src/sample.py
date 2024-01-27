@@ -10,15 +10,15 @@ def top_k_logits(logits, k):
     def _top_k():
         values, _ = tf.nn.top_k(logits, k=k)
         min_values = values[:, -1, tf.newaxis]
-        return tf.where(
+        return tf.compat.v1.where(
             logits < min_values,
             tf.ones_like(logits, dtype=logits.dtype) * -1e10,
             logits,
         )
     return tf.cond(
-       tf.equal(k, 0),
-       lambda: logits,
-       lambda: _top_k(),
+       pred=tf.equal(k, 0),
+       true_fn=lambda: logits,
+       false_fn=lambda: _top_k(),
     )
 
 
@@ -30,10 +30,10 @@ def top_p_logits(logits, p):
     indices = tf.stack([
         tf.range(0, batch),
         # number of indices to include
-        tf.maximum(tf.reduce_sum(tf.cast(cumulative_probs <= p, tf.int32), axis=-1) - 1, 0),
+        tf.maximum(tf.reduce_sum(input_tensor=tf.cast(cumulative_probs <= p, tf.int32), axis=-1) - 1, 0),
     ], axis=-1)
     min_values = tf.gather_nd(sorted_logits, indices)
-    return tf.where(
+    return tf.compat.v1.where(
         logits < min_values,
         tf.ones_like(logits) * -1e10,
         logits,
@@ -48,9 +48,9 @@ def sample_sequence(*, hparams, length, start_token=None, batch_size=None, conte
         context = tf.fill([batch_size, 1], start_token)
 
     def step(hparams, tokens, past=None):
-        lm_output = model.model(hparams=hparams, X=tokens, past=past, reuse=tf.AUTO_REUSE)
+        lm_output = model.model(hparams=hparams, X=tokens, past=past, reuse=tf.compat.v1.AUTO_REUSE)
 
-        logits = lm_output['logits'][:, :, :hparams.n_vocab]
+        logits = lm_output['logits'][:, :, :hparams['n_vocab']]
         presents = lm_output['present']
         presents.set_shape(model.past_shape(hparams=hparams, batch_size=batch_size))
         return {
@@ -58,13 +58,13 @@ def sample_sequence(*, hparams, length, start_token=None, batch_size=None, conte
             'presents': presents,
         }
 
-    with tf.name_scope('sample_sequence'):
+    with tf.compat.v1.name_scope('sample_sequence'):
         def body(past, prev, output):
             next_outputs = step(hparams, prev, past=past)
-            logits = next_outputs['logits'][:, -1, :]  / tf.to_float(temperature)
+            logits = next_outputs['logits'][:, -1, :]  / tf.cast(temperature, dtype=tf.float32)
             logits = top_k_logits(logits, k=top_k)
             logits = top_p_logits(logits, p=top_p)
-            samples = tf.multinomial(logits, num_samples=1, output_dtype=tf.int32)
+            samples = tf.random.categorical(logits=logits, num_samples=1, dtype=tf.int32)
             return [
                 next_outputs['presents'] if past is None else tf.concat([past, next_outputs['presents']], axis=-2),
                 samples,
