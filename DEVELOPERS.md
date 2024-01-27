@@ -82,6 +82,11 @@ To give the model custom prompts, you can use:
 python3 src/interactive_conditional_samples.py --top_k 40
 ```
 
+Or to give a the model a list of prompts from a file, you can use:
+```
+python3 src/generate_conditional_samples.py --input_file path/to/input.txt
+```
+
 To check flag descriptions, use:
 ```
 python3 src/interactive_conditional_samples.py -- --help
