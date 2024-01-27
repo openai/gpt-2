@@ -1,3 +1,10 @@
+# GPT-2 experiments
+In this repo we are running experiment with GPT-2 language modle to compare it with other language model such as BERT, GPT-3, T5 etc.
+
+## Text Completion
+One of the experiments we are interested in doing is to compare how GPT-2 compares with GPT-3 on the text ccompletion task.  So, we have prompted GPT-2 with a few sentence to see how it performs.  See the notebook for details.  See "Run your Text Completeion tasks here" section in the notebook.
+
+
 **Status:** Archive (code is provided as-is, no updates expected)
 
 # gpt-2
