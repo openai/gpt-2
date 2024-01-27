@@ -6,7 +6,7 @@ Inspired by [Model Cards for Model Reporting (Mitchell et al.)](https://arxiv.or
 
 ## Model Details.
 
-This model was developed by researchers at OpenAI to help us understand how the capabilities of language model capabilities scale as a function of the size of the models (by parameter count) combined with very large internet-scale datasets (WebText).
+This model was developed by researchers at OpenAI to help us understand how the capabilities of language model scale as a function of the size of the models (by parameter count) combined with very large internet-scale datasets (WebText).
 
 ### Model date
 
