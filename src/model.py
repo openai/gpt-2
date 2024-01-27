@@ -85,7 +85,7 @@ def attn(x, scope, n_state, *, past, hparams):
         _, _, nd, ns = shape_list(w)
         b = attention_mask(nd, ns, dtype=w.dtype)
         b = tf.reshape(b, [1, 1, nd, ns])
-        w = w*b - tf.cast(1e10, w.dtype)*(1-b)
+        w = w*b - tf.cast(1e4, w.dtype)*(1-b)
         return w
 
     def multihead_attn(q, k, v):
