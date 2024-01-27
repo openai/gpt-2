@@ -40,8 +40,6 @@ def interact_model(
      (i.e. contains the <model_name> folder)
     """
     models_dir = os.path.expanduser(os.path.expandvars(models_dir))
-    if batch_size is None:
-        batch_size = 1
     assert nsamples % batch_size == 0
 
     enc = encoder.get_encoder(model_name, models_dir)
