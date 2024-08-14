@@ -1,58 +1,148 @@
-**Status:** Archive (code is provided as-is, no updates expected)
+# OpenTelemetry Code Generator with GPT-2
 
-# gpt-2
+This project fine-tunes a GPT-2 model to automatically generate OpenTelemetry instrumentation for Java code. The model is trained on a dataset of Java code snippets, and the fine-tuned model is capable of suggesting how to instrument Java methods/classes with OpenTelemetry.
 
-Code and models from the paper ["Language Models are Unsupervised Multitask Learners"](https://d4mucfpksywv.cloudfront.net/better-language-models/language-models.pdf).
+## Table of Contents
 
-You can read about GPT-2 and its staged release in our [original blog post](https://openai.com/research/better-language-models/), [6 month follow-up post](https://openai.com/blog/gpt-2-6-month-follow-up/), and [final post](https://www.openai.com/blog/gpt-2-1-5b-release/).
+- [Project Overview](#project-overview)
+- [Setup and Installation](#setup-and-installation)
+- [Preparing the Dataset](#preparing-the-dataset)
+- [Training the Model](#training-the-model)
+- [Generating Instrumented Code](#generating-instrumented-code)
+- [Troubleshooting](#troubleshooting)
+- [Contributing](#contributing)
+- [License](#license)
 
-We have also [released a dataset](https://github.com/openai/gpt-2-output-dataset) for researchers to study their behaviors.
+## Project Overview
 
-<sup>*</sup> *Note that our original parameter counts were wrong due to an error (in our previous blog posts and paper).  Thus you may have seen small referred to as 117M and medium referred to as 345M.*
+This project involves fine-tuning a GPT-2 model to automatically suggest OpenTelemetry instrumentation code for Java applications. The model is trained on a dataset containing pairs of non-instrumented and instrumented Java code snippets.
 
-## Usage
+## Setup and Installation
 
-This repository is meant to be a starting point for researchers and engineers to experiment with GPT-2.
+### 1. Clone the Repository
 
-For basic information, see our [model card](./model_card.md).
-
-### Some caveats
-
-- GPT-2 models' robustness and worst case behaviors are not well-understood.  As with any machine-learned model, carefully evaluate GPT-2 for your use case, especially if used without fine-tuning or in safety-critical applications where reliability is important.
-- The dataset our GPT-2 models were trained on contains many texts with [biases](https://twitter.com/TomerUllman/status/1101485289720242177) and factual inaccuracies, and thus GPT-2 models are likely to be biased and inaccurate as well.
-- To avoid having samples mistaken as human-written, we recommend clearly labeling samples as synthetic before wide dissemination.  Our models are often incoherent or inaccurate in subtle ways, which takes more than a quick read for a human to notice.
-
-### Work with us
-
-Please [let us know](mailto:languagequestions@openai.com) if you’re doing interesting research with or working on applications of GPT-2!  We’re especially interested in hearing from and potentially working with those who are studying
-- Potential malicious use cases and defenses against them (e.g. the detectability of synthetic text)
-- The extent of problematic content (e.g. bias) being baked into the models and effective mitigations
-
-## Development
-
-See [DEVELOPERS.md](./DEVELOPERS.md)
-
-## Contributors
-
-See [CONTRIBUTORS.md](./CONTRIBUTORS.md)
-
-## Citation
-
-Please use the following bibtex entry:
+```bash
+git clone https://github.com/yourusername/gpt2-opentelemetry-codegen.git
+cd gpt2-opentelemetry-codegen
 ```
-@article{radford2019language,
-  title={Language Models are Unsupervised Multitask Learners},
-  author={Radford, Alec and Wu, Jeff and Child, Rewon and Luan, David and Amodei, Dario and Sutskever, Ilya},
-  year={2019}
+
+### 2. Create a Virtual Environment
+
+Create and activate a virtual environment using `venv`:
+
+```bash
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+```
+
+### 3. Install Dependencies
+
+Install the required Python libraries:
+
+```bash
+pip install -r requirements.txt
+```
+
+The `requirements.txt` file should include the following packages:
+
+```plaintext
+transformers==4.30.2
+datasets==2.10.1
+torch==2.0.1
+tensorflow==2.12.0  # Optional, if you want to use TensorFlow
+```
+
+### 4. Download the Pre-trained GPT-2 Model
+
+The pre-trained GPT-2 model will be automatically downloaded from Hugging Face when you first run the script. No additional steps are required for this.
+
+## Preparing the Dataset
+
+Create a dataset file named `java_code_dataset.txt` containing pairs of non-instrumented and instrumented Java code snippets. Here is an example format:
+
+```plaintext
+#### Non-Instrumented Code Example 1:
+public class ExampleService {
+    public void process() {
+        System.out.println("Processing data...");
+    }
+}
+
+#### Instrumented Code Example 1:
+// Instrumentation using OpenTelemetry
+public class ExampleService {
+    public void process() {
+        // Start tracing
+        Span span = tracer.spanBuilder("process").startSpan();
+        try {
+            // Original logic
+            System.out.println("Processing data...");
+        } finally {
+            // End tracing
+            span.end();
+        }
+    }
 }
 ```
 
-## Future work
+Ensure that the file is properly formatted and saved in the root directory of the project.
 
-We may release code for evaluating the models on various benchmarks.
+## Training the Model
 
-We are still considering release of the larger models.
+### 1. Set Up Training Script
 
-## License
+The provided script `otel_code_gen_gpt2.py` handles the fine-tuning process.
 
-[Modified MIT](./LICENSE)
+### 2. Train the Model
+
+To fine-tune the model on your dataset, run:
+
+```bash
+python otel_code_gen_gpt2.py
+```
+
+This will:
+
+1. Load the pre-trained GPT-2 model and tokenizer.
+2. Tokenize your dataset.
+3. Fine-tune the model on the dataset.
+4. Save the fine-tuned model to the `./gpt2-java-instrumentation` directory.
+
+### 3. Monitor Training
+
+During training, you can monitor the loss and other metrics to ensure the model is learning effectively. The final model and tokenizer will be saved for future use.
+
+## Generating Instrumented Code
+
+After training, you can use the fine-tuned model to generate OpenTelemetry instrumentation suggestions for Java code. Modify the prompt in the script as needed:
+
+```python
+prompt = """
+// Instrument this Java class with OpenTelemetry:
+
+public class ExampleService {
+    public void process() {
+        System.out.println("Processing data...");
+    }
+}
+"""
+
+# Generate instrumented code suggestion
+inputs = tokenizer(prompt, return_tensors="pt")
+outputs = model.generate(inputs['input_ids'], max_length=256, num_return_sequences=1)
+
+# Decode and print the generated code
+print(tokenizer.decode(outputs[0], skip_special_tokens=True))
+```
+
+Run the script again to see the output:
+
+```bash
+python otel_code_gen_gpt2.py
+```
+
+## Troubleshooting
+
+- **Model Overfitting**: If the model overfits (i.e., produces very low training loss but poor results), try expanding the dataset and adjusting training parameters.
+- **Memory Issues**: If you run into memory issues, reduce the batch size in the `TrainingArguments`.
+- **Unexpected Behavior**: If you see warnings about the attention mask or padding tokens, ensure that the tokenizer and model are correctly configured with the `pad_token`.

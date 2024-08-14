@@ -1,0 +1,909 @@
+#### Non-Instrumented Code Example 1:
+public class ExampleService {
+    public void process() {
+        System.out.println("Processing data...");
+    }
+}
+
+#### Instrumented Code Example 1:
+// Instrumentation using OpenTelemetry auto-instrumentation with a Java agent
+// To instrument this application, you would typically run it with the following JVM arguments:
+//
+// -javaagent:/path/to/opentelemetry-javaagent-all.jar
+//
+// The agent automatically instruments the code at runtime without needing any changes to the source code.
+public class ExampleService {
+    public void process() {
+        System.out.println("Processing data...");
+    }
+}
+
+---
+
+#### Non-Instrumented Code Example 2:
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+
+public class DatabaseService {
+    public Connection getConnection() throws SQLException {
+        return DriverManager.getConnection("jdbc:mysql://localhost:3306/mydb", "user", "password");
+    }
+}
+
+#### Instrumented Code Example 2:
+// Instrumentation using OpenTelemetry auto-instrumentation with a Java agent
+// To instrument this application, you would typically run it with the following JVM arguments:
+//
+// -javaagent:/path/to/opentelemetry-javaagent-all.jar
+//
+// The agent automatically instruments the JDBC calls without any modifications to the code.
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+
+public class DatabaseService {
+    public Connection getConnection() throws SQLException {
+        return DriverManager.getConnection("jdbc:mysql://localhost:3306/mydb", "user", "password");
+    }
+}
+
+---
+
+#### Non-Instrumented Code Example 3:
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+@SpringBootApplication
+public class MySpringApplication {
+    public static void main(String[] args) {
+        SpringApplication.run(MySpringApplication.class, args);
+    }
+}
+
+#### Instrumented Code Example 3:
+// Instrumentation using OpenTelemetry auto-instrumentation with a Java agent
+// To instrument this Spring Boot application, run it with the following JVM arguments:
+//
+// -javaagent:/path/to/opentelemetry-javaagent-all.jar
+//
+// The agent will automatically instrument the Spring Boot application, capturing key metrics and traces.
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+@SpringBootApplication
+public class MySpringApplication {
+    public static void main(String[] args) {
+        SpringApplication.run(MySpringApplication.class, args);
+    }
+}
+
+---
+
+#### Non-Instrumented Code Example 4:
+import java.net.HttpURLConnection;
+import java.net.URL;
+
+public class HttpService {
+    public void sendRequest() throws Exception {
+        URL url = new URL("http://example.com");
+        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+        conn.setRequestMethod("GET");
+        int responseCode = conn.getResponseCode();
+        System.out.println("Response Code: " + responseCode);
+    }
+}
+
+#### Instrumented Code Example 4:
+// Instrumentation using OpenTelemetry auto-instrumentation with a Java agent
+// To instrument this HTTP client code, you would typically run it with the following JVM arguments:
+//
+// -javaagent:/path/to/opentelemetry-javaagent-all.jar
+//
+// The agent automatically instruments HTTP client calls made via HttpURLConnection without any modifications to the code.
+import java.net.HttpURLConnection;
+import java.net.URL;
+
+public class HttpService {
+    public void sendRequest() throws Exception {
+        URL url = new URL("http://example.com");
+        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+        conn.setRequestMethod("GET");
+        int responseCode = conn.getResponseCode();
+        System.out.println("Response Code: " + responseCode);
+    }
+}
+
+---
+
+#### Non-Instrumented Code Example 5:
+import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.apache.kafka.clients.consumer.ConsumerRecords;
+import org.apache.kafka.clients.consumer.KafkaConsumer;
+
+import java.time.Duration;
+import java.util.Collections;
+import java.util.Properties;
+
+public class KafkaService {
+    public void consumeMessages() {
+        Properties props = new Properties();
+        props.put("bootstrap.servers", "localhost:9092");
+        props.put("group.id", "test");
+        props.put("enable.auto.commit", "true");
+        props.put("key.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
+        props.put("value.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
+
+        KafkaConsumer<String, String> consumer = new KafkaConsumer<>(props);
+        consumer.subscribe(Collections.singletonList("my-topic"));
+
+        while (true) {
+            ConsumerRecords<String, String> records = consumer.poll(Duration.ofMillis(100));
+            for (ConsumerRecord<String, String> record : records) {
+                System.out.printf("offset = %d, key = %s, value = %s%n", record.offset(), record.key(), record.value());
+            }
+        }
+    }
+}
+
+#### Instrumented Code Example 5:
+// Instrumentation using OpenTelemetry auto-instrumentation with a Java agent
+// To instrument this Kafka consumer, you would typically run it with the following JVM arguments:
+//
+// -javaagent:/path/to/opentelemetry-javaagent-all.jar
+//
+// The agent automatically instruments Kafka consumer operations without any modifications to the code.
+import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.apache.kafka.clients.consumer.ConsumerRecords;
+import org.apache.kafka.clients.consumer.KafkaConsumer;
+
+import java.time.Duration;
+import java.util.Collections;
+import java.util.Properties;
+
+public class KafkaService {
+    public void consumeMessages() {
+        Properties props = new Properties();
+        props.put("bootstrap.servers", "localhost:9092");
+        props.put("group.id", "test");
+        props.put("enable.auto.commit", "true");
+        props.put("key.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
+        props.put("value.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
+
+        KafkaConsumer<String, String> consumer = new KafkaConsumer<>(props);
+        consumer.subscribe(Collections.singletonList("my-topic"));
+
+        while (true) {
+            ConsumerRecords<String, String> records = consumer.poll(Duration.ofMillis(100));
+            for (ConsumerRecord<String, String> record : records) {
+                System.out.printf("offset = %d, key = %s, value = %s%n", record.offset(), record.key(), record.value());
+            }
+        }
+    }
+}
+
+---
+
+#### Non-Instrumented Code Example 6:
+import redis.clients.jedis.Jedis;
+
+public class RedisService {
+    public void saveValue(String key, String value) {
+        try (Jedis jedis = new Jedis("localhost")) {
+            jedis.set(key, value);
+        }
+    }
+
+    public String getValue(String key) {
+        try (Jedis jedis = new Jedis("localhost")) {
+            return jedis.get(key);
+        }
+    }
+}
+
+#### Instrumented Code Example 6:
+// Instrumentation using OpenTelemetry auto-instrumentation with a Java agent
+// To instrument this Redis client code, you would typically run it with the following JVM arguments:
+//
+// -javaagent:/path/to/opentelemetry-javaagent-all.jar
+//
+// The agent automatically instruments Redis client operations without any modifications to the code.
+import redis.clients.jedis.Jedis;
+
+public class RedisService {
+    public void saveValue(String key, String value) {
+        try (Jedis jedis = new Jedis("localhost")) {
+            jedis.set(key, value);
+        }
+    }
+
+    public String getValue(String key) {
+        try (Jedis jedis = new Jedis("localhost")) {
+            return jedis.get(key);
+        }
+    }
+}
+
+---
+
+#### Non-Instrumented Code Example 7:
+public class ExampleService {
+    public void process() {
+        System.out.println("Processing data...");
+    }
+}
+
+#### Instrumented Code Example 7:
+// Instrumentation using OpenTelemetry auto-instrumentation with a Java agent
+// To instrument this application, you would typically run it with the following JVM arguments:
+//
+// -javaagent:/path/to/opentelemetry-javaagent-all.jar
+//
+// The agent automatically instruments the code at runtime without needing any changes to the source code.
+public class ExampleService {
+    public void process() {
+        System.out.println("Processing data...");
+    }
+}
+
+---
+
+#### Non-Instrumented Code Example 8:
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+
+public class DatabaseService {
+    public Connection getConnection() throws SQLException {
+        return DriverManager.getConnection("jdbc:mysql://localhost:3306/mydb", "user", "password");
+    }
+}
+
+#### Instrumented Code Example 8:
+// Instrumentation using OpenTelemetry auto-instrumentation with a Java agent
+// To instrument this application, you would typically run it with the following JVM arguments:
+//
+// -javaagent:/path/to/opentelemetry-javaagent-all.jar
+//
+// The agent automatically instruments the JDBC calls without any modifications to the code.
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+
+public class DatabaseService {
+    public Connection getConnection() throws SQLException {
+        return DriverManager.getConnection("jdbc:mysql://localhost:3306/mydb", "user", "password");
+    }
+}
+
+---
+
+#### Non-Instrumented Code Example 9:
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+@SpringBootApplication
+public class MySpringApplication {
+    public static void main(String[] args) {
+        SpringApplication.run(MySpringApplication.class, args);
+    }
+}
+
+#### Instrumented Code Example 9:
+// Instrumentation using OpenTelemetry auto-instrumentation with a Java agent
+// To instrument this Spring Boot application, run it with the following JVM arguments:
+//
+// -javaagent:/path/to/opentelemetry-javaagent-all.jar
+//
+// The agent will automatically instrument the Spring Boot application, capturing key metrics and traces.
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+@SpringBootApplication
+public class MySpringApplication {
+    public static void main(String[] args) {
+        SpringApplication.run(MySpringApplication.class, args);
+    }
+}
+
+---
+
+#### Non-Instrumented Code Example 10:
+import java.net.HttpURLConnection;
+import java.net.URL;
+
+public class HttpService {
+    public void sendRequest() throws Exception {
+        URL url = new URL("http://example.com");
+        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+        conn.setRequestMethod("GET");
+        int responseCode = conn.getResponseCode();
+        System.out.println("Response Code: " + responseCode);
+    }
+}
+
+#### Instrumented Code Example 10:
+// Instrumentation using OpenTelemetry auto-instrumentation with a Java agent
+// To instrument this HTTP client code, you would typically run it with the following JVM arguments:
+//
+// -javaagent:/path/to/opentelemetry-javaagent-all.jar
+//
+// The agent automatically instruments HTTP client calls made via HttpURLConnection without any modifications to the code.
+import java.net.HttpURLConnection;
+import java.net.URL;
+
+public class HttpService {
+    public void sendRequest() throws Exception {
+        URL url = new URL("http://example.com");
+        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+        conn.setRequestMethod("GET");
+        int responseCode = conn.getResponseCode();
+        System.out.println("Response Code: " + responseCode);
+    }
+}
+
+---
+
+#### Non-Instrumented Code Example 11:
+import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.apache.kafka.clients.consumer.ConsumerRecords;
+import org.apache.kafka.clients.consumer.KafkaConsumer;
+
+import java.time.Duration;
+import java.util.Collections;
+import java.util.Properties;
+
+public class KafkaService {
+    public void consumeMessages() {
+        Properties props = new Properties();
+        props.put("bootstrap.servers", "localhost:9092");
+        props.put("group.id", "test");
+        props.put("enable.auto.commit", "true");
+        props.put("key.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
+        props.put("value.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
+
+        KafkaConsumer<String, String> consumer = new KafkaConsumer<>(props);
+        consumer.subscribe(Collections.singletonList("my-topic"));
+
+        while (true) {
+            ConsumerRecords<String, String> records = consumer.poll(Duration.ofMillis(100));
+            for (ConsumerRecord<String, String> record : records) {
+                System.out.printf("offset = %d, key = %s, value = %s%n", record.offset(), record.key(), record.value());
+            }
+        }
+    }
+}
+
+#### Instrumented Code Example 11:
+// Instrumentation using OpenTelemetry auto-instrumentation with a Java agent
+// To instrument this Kafka consumer, you would typically run it with the following JVM arguments:
+//
+// -javaagent:/path/to/opentelemetry-javaagent-all.jar
+//
+// The agent automatically instruments Kafka consumer operations without any modifications to the code.
+import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.apache.kafka.clients.consumer.ConsumerRecords;
+import org.apache.kafka.clients.consumer.KafkaConsumer;
+
+import java.time.Duration;
+import java.util.Collections;
+import java.util.Properties;
+
+public class KafkaService {
+    public void consumeMessages() {
+        Properties props = new Properties();
+        props.put("bootstrap.servers", "localhost:9092");
+        props.put("group.id", "test");
+        props.put("enable.auto.commit", "true");
+        props.put("key.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
+        props.put("value.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
+
+        KafkaConsumer<String, String> consumer = new KafkaConsumer<>(props);
+        consumer.subscribe(Collections.singletonList("my-topic"));
+
+        while (true) {
+            ConsumerRecords<String, String> records = consumer.poll(Duration.ofMillis(100));
+            for (ConsumerRecord<String, String> record : records) {
+                System.out.printf("offset = %d, key = %s, value = %s%n", record.offset(), record.key(), record.value());
+            }
+        }
+    }
+}
+
+---
+
+#### Non-Instrumented Code Example 12:
+import redis.clients.jedis.Jedis;
+
+public class RedisService {
+    public void saveValue(String key, String value) {
+        try (Jedis jedis = new Jedis("localhost")) {
+            jedis.set(key, value);
+        }
+    }
+
+    public String getValue(String key) {
+        try (Jedis jedis = new Jedis("localhost")) {
+            return jedis.get(key);
+        }
+    }
+}
+
+#### Instrumented Code Example 12:
+// Instrumentation using OpenTelemetry auto-instrumentation with a Java agent
+// To instrument this Redis client code, you would typically run it with the following JVM arguments:
+//
+// -javaagent:/path/to/opentelemetry-javaagent-all.jar
+//
+// The agent automatically instruments Redis client operations without any modifications to the code.
+import redis.clients.jedis.Jedis;
+
+public class RedisService {
+    public void saveValue(String key, String value) {
+        try (Jedis jedis = new Jedis("localhost")) {
+            jedis.set(key, value);
+        }
+    }
+
+    public String getValue(String key) {
+        try (Jedis jedis = new Jedis("localhost")) {
+            return jedis.get(key);
+        }
+    }
+}
+
+---
+
+#### Non-Instrumented Code Example 13:
+public class ExampleService {
+    public void process() {
+        System.out.println("Processing data...");
+    }
+}
+
+#### Instrumented Code Example 13:
+// Instrumentation using OpenTelemetry auto-instrumentation with a Java agent
+// To instrument this application, you would typically run it with the following JVM arguments:
+//
+// -javaagent:/path/to/opentelemetry-javaagent-all.jar
+//
+// The agent automatically instruments the code at runtime without needing any changes to the source code.
+public class ExampleService {
+    public void process() {
+        System.out.println("Processing data...");
+    }
+}
+
+---
+
+#### Non-Instrumented Code Example 14:
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+
+public class DatabaseService {
+    public Connection getConnection() throws SQLException {
+        return DriverManager.getConnection("jdbc:mysql://localhost:3306/mydb", "user", "password");
+    }
+}
+
+#### Instrumented Code Example 14:
+// Instrumentation using OpenTelemetry auto-instrumentation with a Java agent
+// To instrument this application, you would typically run it with the following JVM arguments:
+//
+// -javaagent:/path/to/opentelemetry-javaagent-all.jar
+//
+// The agent automatically instruments the JDBC calls without any modifications to the code.
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+
+public class DatabaseService {
+    public Connection getConnection() throws SQLException {
+        return DriverManager.getConnection("jdbc:mysql://localhost:3306/mydb", "user", "password");
+    }
+}
+
+---
+
+#### Non-Instrumented Code Example 15:
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+@SpringBootApplication
+public class MySpringApplication {
+    public static void main(String[] args) {
+        SpringApplication.run(MySpringApplication.class, args);
+    }
+}
+
+#### Instrumented Code Example 15:
+// Instrumentation using OpenTelemetry auto-instrumentation with a Java agent
+// To instrument this Spring Boot application, run it with the following JVM arguments:
+//
+// -javaagent:/path/to/opentelemetry-javaagent-all.jar
+//
+// The agent will automatically instrument the Spring Boot application, capturing key metrics and traces.
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+@SpringBootApplication
+public class MySpringApplication {
+    public static void main(String[] args) {
+        SpringApplication.run(MySpringApplication.class, args);
+    }
+}
+
+---
+
+#### Non-Instrumented Code Example 16:
+import java.net.HttpURLConnection;
+import java.net.URL;
+
+public class HttpService {
+    public void sendRequest() throws Exception {
+        URL url = new URL("http://example.com");
+        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+        conn.setRequestMethod("GET");
+        int responseCode = conn.getResponseCode();
+        System.out.println("Response Code: " + responseCode);
+    }
+}
+
+#### Instrumented Code Example 16:
+// Instrumentation using OpenTelemetry auto-instrumentation with a Java agent
+// To instrument this HTTP client code, you would typically run it with the following JVM arguments:
+//
+// -javaagent:/path/to/opentelemetry-javaagent-all.jar
+//
+// The agent automatically instruments HTTP client calls made via HttpURLConnection without any modifications to the code.
+import java.net.HttpURLConnection;
+import java.net.URL;
+
+public class HttpService {
+    public void sendRequest() throws Exception {
+        URL url = new URL("http://example.com");
+        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+        conn.setRequestMethod("GET");
+        int responseCode = conn.getResponseCode();
+        System.out.println("Response Code: " + responseCode);
+    }
+}
+
+---
+
+#### Non-Instrumented Code Example 17:
+import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.apache.kafka.clients.consumer.ConsumerRecords;
+import org.apache.kafka.clients.consumer.KafkaConsumer;
+
+import java.time.Duration;
+import java.util.Collections;
+import java.util.Properties;
+
+public class KafkaService {
+    public void consumeMessages() {
+        Properties props = new Properties();
+        props.put("bootstrap.servers", "localhost:9092");
+        props.put("group.id", "test");
+        props.put("enable.auto.commit", "true");
+        props.put("key.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
+        props.put("value.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
+
+        KafkaConsumer<String, String> consumer = new KafkaConsumer<>(props);
+        consumer.subscribe(Collections.singletonList("my-topic"));
+
+        while (true) {
+            ConsumerRecords<String, String> records = consumer.poll(Duration.ofMillis(100));
+            for (ConsumerRecord<String, String> record : records) {
+                System.out.printf("offset = %d, key = %s, value = %s%n", record.offset(), record.key(), record.value());
+            }
+        }
+    }
+}
+
+#### Instrumented Code Example 17:
+// Instrumentation using OpenTelemetry auto-instrumentation with a Java agent
+// To instrument this Kafka consumer, you would typically run it with the following JVM arguments:
+//
+// -javaagent:/path/to/opentelemetry-javaagent-all.jar
+//
+// The agent automatically instruments Kafka consumer operations without any modifications to the code.
+import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.apache.kafka.clients.consumer.ConsumerRecords;
+import org.apache.kafka.clients.consumer.KafkaConsumer;
+
+import java.time.Duration;
+import java.util.Collections;
+import java.util.Properties;
+
+public class KafkaService {
+    public void consumeMessages() {
+        Properties props = new Properties();
+        props.put("bootstrap.servers", "localhost:9092");
+        props.put("group.id", "test");
+        props.put("enable.auto.commit", "true");
+        props.put("key.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
+        props.put("value.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
+
+        KafkaConsumer<String, String> consumer = new KafkaConsumer<>(props);
+        consumer.subscribe(Collections.singletonList("my-topic"));
+
+        while (true) {
+            ConsumerRecords<String, String> records = consumer.poll(Duration.ofMillis(100));
+            for (ConsumerRecord<String, String> record : records) {
+                System.out.printf("offset = %d, key = %s, value = %s%n", record.offset(), record.key(), record.value());
+            }
+        }
+    }
+}
+
+---
+
+#### Non-Instrumented Code Example 18:
+import redis.clients.jedis.Jedis;
+
+public class RedisService {
+    public void saveValue(String key, String value) {
+        try (Jedis jedis = new Jedis("localhost")) {
+            jedis.set(key, value);
+        }
+    }
+
+    public String getValue(String key) {
+        try (Jedis jedis = new Jedis("localhost")) {
+            return jedis.get(key);
+        }
+    }
+}
+
+#### Instrumented Code Example 18:
+// Instrumentation using OpenTelemetry auto-instrumentation with a Java agent
+// To instrument this Redis client code, you would typically run it with the following JVM arguments:
+//
+// -javaagent:/path/to/opentelemetry-javaagent-all.jar
+//
+// The agent automatically instruments Redis client operations without any modifications to the code.
+import redis.clients.jedis.Jedis;
+
+public class RedisService {
+    public void saveValue(String key, String value) {
+        try (Jedis jedis = new Jedis("localhost")) {
+            jedis.set(key, value);
+        }
+    }
+
+    public String getValue(String key) {
+        try (Jedis jedis = new Jedis("localhost")) {
+            return jedis.get(key);
+        }
+    }
+}
+
+---
+
+#### Non-Instrumented Code Example 19:
+public class ExampleService {
+    public void process() {
+        System.out.println("Processing data...");
+    }
+}
+
+#### Instrumented Code Example 19:
+// Instrumentation using OpenTelemetry auto-instrumentation with a Java agent
+// To instrument this application, you would typically run it with the following JVM arguments:
+//
+// -javaagent:/path/to/opentelemetry-javaagent-all.jar
+//
+// The agent automatically instruments the code at runtime without needing any changes to the source code.
+public class ExampleService {
+    public void process() {
+        System.out.println("Processing data...");
+    }
+}
+
+---
+
+#### Non-Instrumented Code Example 20:
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+
+public class DatabaseService {
+    public Connection getConnection() throws SQLException {
+        return DriverManager.getConnection("jdbc:mysql://localhost:3306/mydb", "user", "password");
+    }
+}
+
+#### Instrumented Code Example 20:
+// Instrumentation using OpenTelemetry auto-instrumentation with a Java agent
+// To instrument this application, you would typically run it with the following JVM arguments:
+//
+// -javaagent:/path/to/opentelemetry-javaagent-all.jar
+//
+// The agent automatically instruments the JDBC calls without any modifications to the code.
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+
+public class DatabaseService {
+    public Connection getConnection() throws SQLException {
+        return DriverManager.getConnection("jdbc:mysql://localhost:3306/mydb", "user", "password");
+    }
+}
+
+---
+
+#### Non-Instrumented Code Example 21:
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+@SpringBootApplication
+public class MySpringApplication {
+    public static void main(String[] args) {
+        SpringApplication.run(MySpringApplication.class, args);
+    }
+}
+
+#### Instrumented Code Example 21:
+// Instrumentation using OpenTelemetry auto-instrumentation with a Java agent
+// To instrument this Spring Boot application, run it with the following JVM arguments:
+//
+// -javaagent:/path/to/opentelemetry-javaagent-all.jar
+//
+// The agent will automatically instrument the Spring Boot application, capturing key metrics and traces.
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+@SpringBootApplication
+public class MySpringApplication {
+    public static void main(String[] args) {
+        SpringApplication.run(MySpringApplication.class, args);
+    }
+}
+
+---
+
+#### Non-Instrumented Code Example 22:
+import java.net.HttpURLConnection;
+import java.net.URL;
+
+public class HttpService {
+    public void sendRequest() throws Exception {
+        URL url = new URL("http://example.com");
+        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+        conn.setRequestMethod("GET");
+        int responseCode = conn.getResponseCode();
+        System.out.println("Response Code: " + responseCode);
+    }
+}
+
+#### Instrumented Code Example 22:
+// Instrumentation using OpenTelemetry auto-instrumentation with a Java agent
+// To instrument this HTTP client code, you would typically run it with the following JVM arguments:
+//
+// -javaagent:/path/to/opentelemetry-javaagent-all.jar
+//
+// The agent automatically instruments HTTP client calls made via HttpURLConnection without any modifications to the code.
+import java.net.HttpURLConnection;
+import java.net.URL;
+
+public class HttpService {
+    public void sendRequest() throws Exception {
+        URL url = new URL("http://example.com");
+        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+        conn.setRequestMethod("GET");
+        int responseCode = conn.getResponseCode();
+        System.out.println("Response Code: " + responseCode);
+    }
+}
+
+---
+
+#### Non-Instrumented Code Example 23:
+import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.apache.kafka.clients.consumer.ConsumerRecords;
+import org.apache.kafka.clients.consumer.KafkaConsumer;
+
+import java.time.Duration;
+import java.util.Collections;
+import java.util.Properties;
+
+public class KafkaService {
+    public void consumeMessages() {
+        Properties props = new Properties();
+        props.put("bootstrap.servers", "localhost:9092");
+        props.put("group.id", "test");
+        props.put("enable.auto.commit", "true");
+        props.put("key.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
+        props.put("value.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
+
+        KafkaConsumer<String, String> consumer = new KafkaConsumer<>(props);
+        consumer.subscribe(Collections.singletonList("my-topic"));
+
+        while (true) {
+            ConsumerRecords<String, String> records = consumer.poll(Duration.ofMillis(100));
+            for (ConsumerRecord<String, String> record : records) {
+                System.out.printf("offset = %d, key = %s, value = %s%n", record.offset(), record.key(), record.value());
+            }
+        }
+    }
+}
+
+#### Instrumented Code Example 23:
+// Instrumentation using OpenTelemetry auto-instrumentation with a Java agent
+// To instrument this Kafka consumer, you would typically run it with the following JVM arguments:
+//
+// -javaagent:/path/to/opentelemetry-javaagent-all.jar
+//
+// The agent automatically instruments Kafka consumer operations without any modifications to the code.
+import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.apache.kafka.clients.consumer.ConsumerRecords;
+import org.apache.kafka.clients.consumer.KafkaConsumer;
+
+import java.time.Duration;
+import java.util.Collections;
+import java.util.Properties;
+
+public class KafkaService {
+    public void consumeMessages() {
+        Properties props = new Properties();
+        props.put("bootstrap.servers", "localhost:9092");
+        props.put("group.id", "test");
+        props.put("enable.auto.commit", "true");
+        props.put("key.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
+        props.put("value.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
+
+        KafkaConsumer<String, String> consumer = new KafkaConsumer<>(props);
+        consumer.subscribe(Collections.singletonList("my-topic"));
+
+        while (true) {
+            ConsumerRecords<String, String> records = consumer.poll(Duration.ofMillis(100));
+            for (ConsumerRecord<String, String> record : records) {
+                System.out.printf("offset = %d, key = %s, value = %s%n", record.offset(), record.key(), record.value());
+            }
+        }
+    }
+}
+
+---
+
+#### Non-Instrumented Code Example 24:
+import redis.clients.jedis.Jedis;
+
+public class RedisService {
+    public void saveValue(String key, String value) {
+        try (Jedis jedis = new Jedis("localhost")) {
+            jedis.set(key, value);
+        }
+    }
+
+    public String getValue(String key) {
+        try (Jedis jedis = new Jedis("localhost")) {
+            return jedis.get(key);
+        }
+    }
+}
+
+#### Instrumented Code Example 24:
+// Instrumentation using OpenTelemetry auto-instrumentation with a Java agent
+// To instrument this Redis client code, you would typically run it with the following JVM arguments:
+//
+// -javaagent:/path/to/opentelemetry-javaagent-all.jar
+//
+// The agent automatically instruments Redis client operations without any modifications to the code.
+import redis.clients.jedis.Jedis;
+
+public class RedisService {
+    public void saveValue(String key, String value) {
+        try (Jedis jedis = new Jedis("localhost")) {
+            jedis.set(key, value);
+        }
+    }
+
+    public String getValue(String key) {
+        try (Jedis jedis = new Jedis("localhost")) {
+            return jedis.get(key);
+        }
+    }
+}
