@@ -1,3 +1,6 @@
 __pycache__
 .mypy_cache/
 models/
+logs/
+gpt2-finetuned/
+gpt2-java-instrumentation/

@@ -1,6 +1,11 @@
 import numpy as np
 import tensorflow as tf
+#from tensorflow.contrib.training import HParams
+#from tensorflow.keras.utils import HParams
 from tensorflow.contrib.training import HParams
+
+import tensorflow.compat.v1 as tfv
+tfv.disable_v2_behavior()
 
 def default_hparams():
     return HParams(
