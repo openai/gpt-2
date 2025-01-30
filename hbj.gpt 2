@@ -1,0 +1,4 @@
+git remote set-url origin https://github.com/TU_USUARIO/gpt-2.git
+git add .
+git commit -m "Modificaciones personalizadas en GPT-2"
+git push origin main
