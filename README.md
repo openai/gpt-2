@@ -41,10 +41,19 @@ See [CONTRIBUTORS.md](./CONTRIBUTORS.md)
 Please use the following bibtex entry:
 ```
 @article{radford2019language,
-  title={Language Models are Unsupervised Multitask Learners},
-  author={Radford, Alec and Wu, Jeff and Child, Rewon and Luan, David and Amodei, Dario and Sutskever, Ilya},
-  year={2019}
+  added-at = {2024-11-15T12:44:17.000+0100},
+  author = {Radford, Alec and Wu, Jeffrey and Child, Rewon and Luan, David and Amodei, Dario and Sutskever, Ilya},
+  biburl = {https://www.bibsonomy.org/bibtex/233e4b003b64b1060334660fbf6db1f3f/albinzehe},
+  journal = {OpenAI},
+  keywords = {gpt gpt2 languagemodelling transferlearning transformer},
+  note = {Accessed: 2024-11-15},
+  timestamp = {2024-11-15T12:44:17.000+0100},
+  title = {Language Models are Unsupervised Multitask Learners},
+  url = {https://cdn.openai.com/better-language-models/language_models_are_unsupervised_multitask_learners.pdf},
+  year = 2019
 }
+
+
 ```
 
 ## Future work
