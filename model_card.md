@@ -21,7 +21,7 @@ Language model
 1.5 billion parameters: the fourth and largest GPT-2 version. We have also released 124 million, 355 million, and 774 million parameter models.
 
 ### Paper or other resource for more information
-[Blog post](https://openai.com/blog/better-language-models/) and [paper](https://d4mucfpksywv.cloudfront.net/better-language-models/language_models_are_unsupervised_multitask_learners.pdf)
+[Blog post](https://openai.com/blog/better-language-models/) and [paper](https://cdn.openai.com/better-language-models/language_models_are_unsupervised_multitask_learners.pdf)
 
 ### Where to send questions or comments about the model
 Please use this [Google Form](https://forms.gle/A7WBSbTY2EkKdroPA)
