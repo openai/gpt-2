@@ -60,9 +60,9 @@ def attention_mask(nd, ns, *, dtype):
 
     Same as tf.matrix_band_part(tf.ones([nd, ns]), -1, ns-nd), but doesn't produce garbage on TPUs.
     """
-    i = tf.range(nd)[:,None]
-    j = tf.range(ns)
-    m = i >= j - ns + nd
+    i = tf.range(nd)[:,None]  # [nd, 1]
+    j = tf.range(ns)  # [ns, ]
+    m = i >= j - ns + nd  # [nd, ns]
     return tf.cast(m, dtype)
 
 
@@ -90,7 +90,7 @@ def attn(x, scope, n_state, *, past, hparams):
 
     def multihead_attn(q, k, v):
         # q, k, v have shape [batch, heads, sequence, features]
-        w = tf.matmul(q, k, transpose_b=True)
+        w = tf.matmul(q, k, transpose_b=True)  # [batch, heads, sequence, sequence (or longer with past)]
         w = w * tf.rsqrt(tf.cast(v.shape[-1].value, w.dtype))
 
         w = mask_attn_weights(w)
@@ -99,8 +99,8 @@ def attn(x, scope, n_state, *, past, hparams):
         return a
 
     with tf.variable_scope(scope):
-        c = conv1d(x, 'c_attn', n_state*3)
-        q, k, v = map(split_heads, tf.split(c, 3, axis=2))
+        c = conv1d(x, 'c_attn', n_state*3)  # [batch, sequence, features * 3]
+        q, k, v = map(split_heads, tf.split(c, 3, axis=2))  # each has [batch, heads, sequence, features]
         present = tf.stack([k, v], axis=1)
         if past is not None:
             pk, pv = tf.unstack(past, axis=1)
