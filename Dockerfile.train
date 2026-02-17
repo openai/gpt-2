@@ -1,0 +1,16 @@
+FROM tensorflow/tensorflow:2.15.0-gpu
+
+ENV NVIDIA_VISIBLE_DEVICES=all \
+    NVIDIA_DRIVER_CAPABILITIES=compute,utility
+
+RUN mkdir -p /gpt-2/src /gpt-2/models/124M
+
+WORKDIR /gpt-2
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY src/model.py src/encoder.py src/train.py src/generate.py src/cprogramming src/
+COPY models/124M/encoder.json models/124M/vocab.bpe models/124M/
+
+CMD ["python3", "src/train.py"]
